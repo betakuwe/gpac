@@ -403,6 +403,16 @@ GF_Err Media_GetSample(GF_MediaBox *mdia, u32 sampleNumber, GF_ISOSample **samp,
 	e = stbl_GetSampleInfos(mdia->information->sampleTable, sampleNumber, &offset, &chunkNumber, sIDX, &isEdited);
 	if (e) return e;
 
+	if (mdia->mediaTrack->moov->mov->nb_corr_ranges) {
+		u32 i;
+		for (i=0; i<mdia->mediaTrack->moov->mov->nb_corr_ranges; i++ ) {
+			if (offset + (*samp)->dataLength < mdia->mediaTrack->moov->mov->corr_start_range[i]) continue;
+			if (offset > mdia->mediaTrack->moov->mov->corr_end_range[i]) continue;
+			if (*samp) gf_isom_sample_del(samp);
+			return GF_CORRUPTED_DATA;
+		}
+	}
+
 	//then get the DataRef
 	e = Media_GetSampleDesc(mdia, *sIDX, &entry, &dataRefIndex);
 	if (e) return e;

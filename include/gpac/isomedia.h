@@ -2489,6 +2489,9 @@ GF_Err gf_isom_get_sample_cenc_info(GF_ISOFile *movie, u32 track, u32 sample_num
 									u8 *crypt_byte_block, u8 *skip_byte_block, u8 *constant_IV_size, bin128 *constant_IV);
 
 
+GF_Err gf_isom_push_corrupted_byte_range(GF_ISOFile *file, u32 start_range, u32 end_range);
+GF_Err gf_isom_set_corrupted_byte_mode(GF_ISOFile *file, Bool simulate_top_index);
+
 #endif /*GPAC_DISABLE_ISOM*/
 
 /*! @} */

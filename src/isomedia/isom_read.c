@@ -3996,4 +3996,24 @@ Bool gf_isom_get_oinf_info(GF_ISOFile *file, u32 trackNumber, GF_OperatingPoints
 	return *ptr ? GF_TRUE : GF_FALSE;
 }
 
+GF_Err gf_isom_push_corrupted_byte_range(GF_ISOFile *file, u32 start_range, u32 end_range)
+{
+	if (!start_range && !end_range) {
+		file->nb_corr_ranges = 0;
+		file->simulate_top_index=GF_FALSE;
+	} else {
+		if (file->nb_corr_ranges>100) return GF_NOT_SUPPORTED;
+		file->corr_start_range[file->nb_corr_ranges] = start_range;
+		file->corr_end_range[file->nb_corr_ranges] = end_range;
+		file->nb_corr_ranges ++;
+	}
+	return GF_OK;
+}
+
+GF_Err gf_isom_set_corrupted_byte_mode(GF_ISOFile *file, Bool simulate_top_index)
+{
+	file->simulate_top_index = simulate_top_index;
+}
+
+
 #endif /*GPAC_DISABLE_ISOM*/

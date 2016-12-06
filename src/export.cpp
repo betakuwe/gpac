@@ -848,6 +848,9 @@
 #pragma comment (linker, EXPORT_SYMBOL(gf_isom_get_oinf_info) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_isom_get_udta_count) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_isom_get_udta_type) )
+#pragma comment (linker, EXPORT_SYMBOL(gf_isom_push_corrupted_byte_range) )
+#pragma comment (linker, EXPORT_SYMBOL(gf_isom_set_corrupted_byte_mode) )
+
 
 #ifndef GPAC_DISABLE_ISOM_WRITE
 #pragma comment (linker, EXPORT_SYMBOL(gf_isom_set_sync_table) )
@@ -2093,6 +2096,7 @@
 #pragma comment (linker, EXPORT_SYMBOL(gf_dash_group_discard_segment) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dash_group_get_next_segment_location) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dash_group_probe_current_download_segment_location) )
+#pragma comment (linker, EXPORT_SYMBOL(gf_dash_group_get_next_segment_size) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dash_group_get_max_segments_in_cache) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dash_set_group_done) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dash_in_period_setup) )

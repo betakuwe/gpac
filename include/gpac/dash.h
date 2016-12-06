@@ -294,8 +294,10 @@ GF_Err gf_dash_group_get_next_segment_location(GF_DashClient *dash, u32 idx, u32
         const char **original_url, Bool *has_next_segment, const char **key_url, bin128 *key_IV);
 
 /*same as gf_dash_group_get_next_segment_location but query the current downloaded segment*/
-GF_EXPORT
 GF_Err gf_dash_group_probe_current_download_segment_location(GF_DashClient *dash, u32 idx, const char **url, s32 *switching_index, const char **switching_url, const char **original_url, Bool *switched);
+
+/*get the size in bytes of next segment */
+GF_Err gf_dash_group_get_next_segment_size(GF_DashClient *dash, u32 idx, u32 *segment_size);
 
 /*returns 1 if segment numbers loops at this level (not allowed but happens when looping captures ...*/
 Bool gf_dash_group_loop_detected(GF_DashClient *dash, u32 idx);

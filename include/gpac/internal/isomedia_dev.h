@@ -2866,6 +2866,11 @@ struct __tag_isom {
 	/*default track for sync of MPEG4 streams - this is the first accessed stream without OCR info - only set in READ mode*/
 	s32 es_id_default_sync;
 
+
+	u32 corr_start_range[100];
+	u32 corr_end_range[100];
+	u32 nb_corr_ranges;
+	Bool simulate_top_index;
 };
 
 /*time function*/

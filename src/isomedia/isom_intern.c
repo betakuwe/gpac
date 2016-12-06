@@ -53,7 +53,7 @@ GF_Err MergeFragment(GF_MovieFragmentBox *moof, GF_ISOFile *mov)
 	}
 	//and all fragments must be continous - we do not throw an error as we may still want to be able to concatenate dependent representations in DASH and
 	//we will likely a-have R1(moofSN 1, 3, 5, 7) plus R2(moofSN 2, 4, 6, 8)
-	if (mov->NextMoofNumber && (mov->NextMoofNumber >= moof->mfhd->sequence_number)) {
+	if (mov->NextMoofNumber && (mov->NextMoofNumber >= moof->mfhd->sequence_number) && !mov->nb_corr_ranges) {
 		GF_LOG(GF_LOG_WARNING, GF_LOG_CONTAINER, ("[iso file] Warning: wrong sequence number: got %d but last one was %d\n", moof->mfhd->sequence_number, mov->NextMoofNumber));
 //		return GF_ISOM_INVALID_FILE;
 	}
@@ -197,6 +197,28 @@ GF_Err gf_isom_parse_movie_boxes(GF_ISOFile *mov, u64 *bytesMissing, Bool progre
 #endif
 
 		e = gf_isom_parse_root_box(&a, mov->movieFileMap->bs, bytesMissing, progressive_mode);
+
+		if ((e==GF_OK) && mov->nb_corr_ranges) {
+			u32 i;
+			u32 corr_type = 0;
+			for (i=0; i<mov->nb_corr_ranges; i++) {
+				if (mov->current_top_box_start>mov->corr_end_range[i]) continue;
+				if (mov->current_top_box_start + a->size < mov->corr_start_range[i]) continue;
+
+				corr_type = 1;
+				//box lies in corrupt range. If header is corrupted we cannot parse subsequent boxes.
+				if ((mov->current_top_box_start + 8 > mov->corr_start_range[i])
+				&& (mov->current_top_box_start + 8 < mov->corr_end_range[i])) {
+					corr_type = 2;
+				}
+			}
+
+			if (corr_type) {
+				gf_isom_box_del(a);
+				if (!mov->simulate_top_index && (corr_type == 2)) return GF_OK;
+				continue;
+			}
+		}
 
 		if (e >= 0) {
 
