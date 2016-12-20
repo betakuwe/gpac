@@ -2867,8 +2867,8 @@ struct __tag_isom {
 	s32 es_id_default_sync;
 
 
-	u32 corr_start_range[100];
-	u32 corr_end_range[100];
+	u32 corr_start_range[1000];
+	u32 corr_end_range[1000];
 	u32 nb_corr_ranges;
 	Bool simulate_top_index;
 };

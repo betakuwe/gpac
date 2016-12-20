@@ -29,11 +29,12 @@ static GFINLINE void PrintUsage(const char * progname)
 					"\t-ber=V             sets bit error rate as double. Default is 0\n"
 					"\t-mtu=S             sets transport unit size in bytes (after removal of IP/TCP/others). Default is 1460\n"
 					"\t-trace=F           sets trace file recording per segment stats\n"
+					"\t-store-rand=R      records random distribution to file R\n"
+					"\t-play-rand=R       reuses random distribution from file R\n"
+					"\t-short             prints short report with tab separation\n"
+					"\t-header            prints header for short report\n"
 					"\t-cache=DIR         sets cache directory to DIR. use \"none\" to disable disk IO (default)\n"
 					"\t-config=cfg        uses/generate CFG config file (default is in current dir)\n"
-					"\t-init-quality=Z    sets the initial quality. Z can be:\n"
-					"\t                   \"min_bandwidth\" \"max_bandwidth\" \"min_quality\" \"max_quality\"\n"
-					"\t-disable-switching disables bitstream switching\n"
 					"\t-retry-timeout     sets retry timeout after a 404 - default is 500ms\n"
 					"\n"
 #ifdef GPAC_MEMORY_TRACKING
@@ -69,6 +70,8 @@ typedef struct
 	Bool disable_cache;
 
 	FILE *trace;
+	FILE *rand_dist_file;
+	Bool use_recorded_dist;
 
 	Bool do_run;
 	Bool connection_ack;
@@ -77,32 +80,48 @@ typedef struct
 
 static Bool use_gaussian_rand = GF_FALSE;
 
-static Double get_random()
+static Double get_random(GF_DashSim *dsim)
 {
 	static Double V1, V2, S;
 	static Bool phase = GF_FALSE;
 	Double X;
 
+	if (dsim->use_recorded_dist) {
+		if (feof(dsim->rand_dist_file)) {
+			GF_LOG(GF_LOG_ERROR, GF_LOG_APP, ("Not enough random numbers in input file, generating new ones ...\n"));
+		} else {
+			char szLine[100];
+			fgets(szLine, 100, dsim->rand_dist_file);
+			X = atof(szLine);
+			return X;
+		}
+	}
+
+
 	if (!use_gaussian_rand) {
 		X = (Double) gf_rand() / RAND_MAX;
-		return X;
-	}
-	if (phase == GF_FALSE) {
-		do {
-			Double U1 = (Double) gf_rand() / RAND_MAX;
-			Double U2 = (Double) gf_rand() / RAND_MAX;
-
-			V1 = 2 * U1 - 1;
-			V2 = 2 * U2 - 1;
-			S = V1 * V1 + V2 * V2;
-
-		} while(S >= 1 || S == 0);
-
-		X = V1 * sqrt(-2 * log(S) / S);
-		phase = GF_TRUE;
 	} else {
-		X = V2 * sqrt(-2 * log(S) / S);
-		phase = GF_FALSE;
+		if (phase == GF_FALSE) {
+			do {
+				Double U1 = (Double) gf_rand() / RAND_MAX;
+				Double U2 = (Double) gf_rand() / RAND_MAX;
+
+				V1 = 2 * U1 - 1;
+				V2 = 2 * U2 - 1;
+				S = V1 * V1 + V2 * V2;
+
+			} while(S >= 1 || S == 0);
+
+			X = V1 * sqrt(-2 * log(S) / S);
+			phase = GF_TRUE;
+		} else {
+			X = V2 * sqrt(-2 * log(S) / S);
+			phase = GF_FALSE;
+		}
+	}
+
+	if (dsim->rand_dist_file && !dsim->use_recorded_dist) {
+		fprintf(dsim->rand_dist_file, "%g\n", X);
 	}
 	return X;
 }
@@ -287,11 +306,10 @@ void dashsim_process_file(GF_DashSim *dsim, u32 group_idx)
 
 	if (dsim->corrupte_byte_window) {
 		u32 first_file_pck = dsim->bytes_processed / dsim->mtu;
-		u32 last_file_pck = (dsim->bytes_processed+file_size)/ dsim->mtu;
+		u32 last_file_byte = (dsim->bytes_processed+file_size);
 		while (1) {
-			u32 next_corr_pck = dsim->next_corrupted_byte / dsim->mtu;
-			assert(next_corr_pck >= first_file_pck);
-			if (next_corr_pck > last_file_pck) {
+			assert(dsim->next_corrupted_byte >= dsim->bytes_processed);
+			if (dsim->next_corrupted_byte > last_file_byte) {
 				break;
 			}
 			corrupted ++;
@@ -301,7 +319,7 @@ void dashsim_process_file(GF_DashSim *dsim, u32 group_idx)
 
 			gf_isom_push_corrupted_byte_range(the_file, corr_start_range, corr_end_range);
 
-			dsim->next_corrupted_byte = dsim->nb_windows * dsim->corrupte_byte_window + get_random() * dsim->corrupte_byte_window;
+			dsim->next_corrupted_byte = dsim->nb_windows * dsim->corrupte_byte_window + get_random(dsim) * dsim->corrupte_byte_window;
 			dsim->nb_windows++;
 		}
 	}
@@ -472,6 +490,8 @@ int main(int argc, char **argv)
 	char *cache_directory = NULL;
 	FILE *logfile = NULL;
 	GF_DashSim dsim;
+	Bool is_short=GF_FALSE;
+	Bool show_header=GF_FALSE;
 
 #ifdef GPAC_MEMORY_TRACKING
 	for (i=1; i<(u32) argc; i++) {
@@ -522,32 +542,35 @@ int main(int argc, char **argv)
 			fprintf(stderr, "WARNING - GPAC not compiled with Memory Tracker - ignoring \"-mem-track\"\n"); 
 		}
 #endif
-		else if (!strnicmp(arg, "-init-quality=", 14)) {
-			if (!stricmp(arg+14, "min_bandwidth")) mode = GF_DASH_SELECT_BANDWIDTH_LOWEST;
-			else if (!stricmp(arg+14, "max_bandwidth")) mode = GF_DASH_SELECT_BANDWIDTH_HIGHEST;
-			else if (!stricmp(arg+14, "min_quality")) mode = GF_DASH_SELECT_QUALITY_LOWEST;
-			else if (!stricmp(arg+14, "max_quality")) mode = GF_DASH_SELECT_QUALITY_HIGHEST;
-		}
-		else if (!strcmp(arg, "-disable-switching")) {
-			disable_switching = 1;
-		}
 		else if (!strnicmp(arg, "-retry-timeout=", 15)) {
 			retry_timeout = atoi(arg+15);
 		}
 		else if (!strnicmp(arg, "-ber=", 5)) {
 			dsim.ber = atof(arg+5);
-			if (dsim.ber) {
-				Double correct_bytes = 1/dsim.ber;
-				dsim.corrupte_byte_window = ceil(correct_bytes/8);
-				dsim.next_corrupted_byte = get_random() * dsim.corrupte_byte_window;
-				dsim.nb_windows=1;
-			} else {
-				dsim.corrupte_byte_window=0;
-				dsim.next_corrupted_byte = 0;
-			}
 		}
 		else if (!strnicmp(arg, "-mtu=", 5)) {
 			dsim.mtu = atoi(arg+5);
+		}
+		else if (!strnicmp(arg, "-store-rand=", 12)) {
+			dsim.rand_dist_file = fopen(arg+12, "wt");
+			if (!dsim.rand_dist_file) {
+				fprintf(stderr, "Cannot open random dist trace %s for record\n", arg+11);
+				goto exit;
+			}
+		}
+		else if (!strnicmp(arg, "-play-rand=", 11)) {
+			dsim.rand_dist_file = fopen(arg+11, "rt");
+			if (!dsim.rand_dist_file) {
+				fprintf(stderr, "Cannot open random dist trace %s for playback\n", arg+11);
+				goto exit;
+			}
+			dsim.use_recorded_dist = GF_TRUE;
+		}
+		else if (!strcmp(arg, "-short")) {
+			is_short=GF_TRUE;
+		}
+		else if (!strcmp(arg, "-header")) {
+			show_header=GF_TRUE;
 		}
 		else if (!strcmp(arg, "-h")) {
 			PrintUsage(argv[0]);
@@ -568,7 +591,14 @@ int main(int argc, char **argv)
 	if (!dsim.mtu) dsim.mtu = 1460;
 
 	if (dsim.ber) {
-		fprintf(stderr, "MTU %u - BER %g - One corrupted byte per %d bytes window\n", dsim.mtu, dsim.ber, dsim.corrupte_byte_window);
+		Double correct_bytes = 1/dsim.ber;
+		dsim.corrupte_byte_window = ceil(correct_bytes/8);
+		dsim.next_corrupted_byte = get_random(&dsim) * dsim.corrupte_byte_window;
+		dsim.nb_windows=1;
+
+		if (!is_short) {
+			fprintf(stdout, "MTU %u - BER %g - One corrupted byte per %d bytes window\n", dsim.mtu, dsim.ber, dsim.corrupte_byte_window);
+		}
 	}
 	/***************************/
 	/*   create downloader     */
@@ -651,14 +681,23 @@ int main(int argc, char **argv)
 	dsim.do_run = 0;
 	gf_dash_close(dsim.dash);
 
-	fprintf(stderr, "Number samples processed: "LLU" - bitrate %u kbps\n", dsim.nb_samples, dsim.duration ? (u32) (8*dsim.bytes_processed / dsim.duration / 1000) : 0);
+	if (is_short) {
+		if (show_header) {
+			fprintf(stdout, "MTU\tBER\tSamples\tBytes\tDuration\tFullLostSegs\tFullLostSamples\tNoIndexSampleLost\tNoIndexSampleCorrupted\tIndexSampleLost\tIndexSampleCorrupted\n");
+		}
+		fprintf(stdout, "%u\t%g\t"LLU"\t"LLU"\t%g\t%u\t"LLU"\t"LLU"\t"LLU"\t"LLU"\t"LLU"", dsim.mtu, dsim.ber, dsim.nb_samples, dsim.bytes_processed, dsim.duration, dsim.nb_seg_lost, dsim.nb_samples_lost_full, dsim.nb_samples_lost_no_index, dsim.nb_samples_corr_no_index, dsim.nb_samples_lost_index, dsim.nb_samples_corr_index);
+	} else {
 
-	fprintf(stderr, "Full segment lost: segments lost %u - samples lost: "LLU" (%g %%)\n", dsim.nb_seg_lost, dsim.nb_samples_lost_full, (Double) dsim.nb_samples_lost_full*100.0/dsim.nb_samples);
+		fprintf(stdout, "Number samples processed: "LLU" - total bytes "LLU" - bitrate %u kbps\n", dsim.nb_samples, dsim.bytes_processed, dsim.duration ? (u32) (8*dsim.bytes_processed / dsim.duration / 1000) : 0);
+
+		fprintf(stdout, "Full segment lost: segments lost %u - samples lost: "LLU" (%g %%)\n", dsim.nb_seg_lost, dsim.nb_samples_lost_full, (Double) dsim.nb_samples_lost_full*100.0/dsim.nb_samples);
 
 
-	fprintf(stderr, "No index: samples lost: "LLU" (%g %%) - corrupted "LLU" (%g %%) - total loss "LLU" (%g %%)\n", dsim.nb_samples_lost_no_index, (Double) dsim.nb_samples_lost_no_index*100.0/dsim.nb_samples, dsim.nb_samples_corr_no_index, (Double) dsim.nb_samples_corr_no_index*100.0/dsim.nb_samples, (dsim.nb_samples_lost_no_index+dsim.nb_samples_corr_no_index), (dsim.nb_samples_lost_no_index+dsim.nb_samples_corr_no_index)*100.0/dsim.nb_samples);
+		fprintf(stdout, "No index: samples lost: "LLU" (%g %%) - corrupted "LLU" (%g %%) - total loss "LLU" (%g %%)\n", dsim.nb_samples_lost_no_index, (Double) dsim.nb_samples_lost_no_index*100.0/dsim.nb_samples, dsim.nb_samples_corr_no_index, (Double) dsim.nb_samples_corr_no_index*100.0/dsim.nb_samples, (dsim.nb_samples_lost_no_index+dsim.nb_samples_corr_no_index), (dsim.nb_samples_lost_no_index+dsim.nb_samples_corr_no_index)*100.0/dsim.nb_samples);
 
-	fprintf(stderr, "With index: samples lost: "LLU" (%g %%) - corrupted "LLU" (%g %%) - total loss "LLU" (%g %%)\n", dsim.nb_samples_lost_index, (Double) dsim.nb_samples_lost_index*100.0/dsim.nb_samples, dsim.nb_samples_corr_index, (Double) dsim.nb_samples_corr_index*100.0/dsim.nb_samples, (dsim.nb_samples_lost_index+dsim.nb_samples_corr_index), (dsim.nb_samples_lost_index+dsim.nb_samples_corr_index)*100.0/dsim.nb_samples);
+		fprintf(stdout, "With index: samples lost: "LLU" (%g %%) - corrupted "LLU" (%g %%) - total loss "LLU" (%g %%)\n", dsim.nb_samples_lost_index, (Double) dsim.nb_samples_lost_index*100.0/dsim.nb_samples, dsim.nb_samples_corr_index, (Double) dsim.nb_samples_corr_index*100.0/dsim.nb_samples, (dsim.nb_samples_lost_index+dsim.nb_samples_corr_index), (dsim.nb_samples_lost_index+dsim.nb_samples_corr_index)*100.0/dsim.nb_samples);
+	}
+
 
 exit:
 
@@ -670,6 +709,6 @@ exit:
 	gf_sys_close();
 	if (logfile) fclose(logfile);
 	if (dsim.trace) gf_fclose(dsim.trace);
-	return 1;
+	return 0;
 }
 

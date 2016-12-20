@@ -1,6 +1,6 @@
 include ../../config.mak
 
-vpath %.c $(SRC_PATH)/applications/dashmuxts
+vpath %.c $(SRC_PATH)/applications/dash_lost_sim
 
 CFLAGS= $(OPTFLAGS) -I"$(SRC_PATH)/include"
 
@@ -14,26 +14,40 @@ CFLAGS+=-pg
 LDFLAGS+=-pg
 endif
 
-#common obj
-OBJS= main.o
-
 LINKFLAGS=-L../../bin/gcc
 ifeq ($(CONFIG_WIN32),yes)
 EXE=.exe
-PROG=mp42ts$(EXE)
+PROG=dash_lost_sim$(EXE)
 else
 EXT=
-PROG=mp42ts
+PROG=dash_lost_sim
 endif
-LINKFLAGS+=-lgpac
 
+ifeq ($(STATICBUILD),yes)
+##include static modules and other deps for libgpac
+include ../../static.mak
+
+#FIXME we have to disable AAC+bifs support in mp42ts since it reuses things from aac_in already in libgpac ...
+ifeq ($(STATIC_MODULES), yes)
+CFLAGS+=-DGPAC_DISABLE_PLAYER
+endif
+
+LINKFLAGS+=-lgpac_static
+LINKFLAGS+= $(GPAC_SH_FLAGS)
+LINKFLAGS+=$(EXTRALIBS)
+else
+LINKFLAGS+=-lgpac
+endif
+
+#common objs - insert after ../static if any to overwrite list of objects
+OBJS= main.o
 
 SRCS := $(OBJS:.o=.c) 
 
 all: $(PROG)
 
 $(PROG): $(OBJS)
-	$(CC) $(LDFLAGS) -o ../../bin/gcc/$@ $(OBJS) $(LINKFLAGS)
+	$(CC) -o ../../bin/gcc/$@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
 
 clean: 
 	rm -f $(OBJS) ../../bin/gcc/$(PROG)
@@ -47,10 +61,4 @@ depend:
 distclean: clean
 	rm -f Makefile.bak .depend
 
-
-
-# include dependency files if they exist
-#
-ifneq ($(wildcard .depend),)
-include .depend
-endif
+-include .depend

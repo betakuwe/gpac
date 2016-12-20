@@ -206,6 +206,11 @@ GF_Err gf_isom_parse_movie_boxes(GF_ISOFile *mov, u64 *bytesMissing, Bool progre
 				if (mov->current_top_box_start + a->size < mov->corr_start_range[i]) continue;
 
 				corr_type = 1;
+
+				if (a->type != GF_ISOM_BOX_TYPE_MDAT) {
+					corr_type = 1;
+				}
+
 				//box lies in corrupt range. If header is corrupted we cannot parse subsequent boxes.
 				if ((mov->current_top_box_start + 8 > mov->corr_start_range[i])
 				&& (mov->current_top_box_start + 8 < mov->corr_end_range[i])) {
