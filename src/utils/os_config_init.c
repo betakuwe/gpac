@@ -600,7 +600,11 @@ static GF_Config *create_default_config(char *file_path)
 	gf_cfg_set_key(cfg, "Network", "BufferLength", "3000");
 	gf_cfg_set_key(cfg, "Network", "BufferMaxOccupancy", "10000");
 
-
+#ifdef GPAC_OPENGAZER
+	gf_cfg_set_key(cfg, "Opengazer", "Enabled", "yes");
+	gf_cfg_set_key(cfg, "Opengazer", "IP_ADRESS", "127.0.01");
+	gf_cfg_set_key(cfg, "Opengazer", "SERVER_PORT", "20320");
+#endif
 	/*locate GUI*/
 	if ( get_default_install_path(szPath, GF_PATH_GUI) ) {
 		char *sep = strrchr(szPath, GF_PATH_SEPARATOR);

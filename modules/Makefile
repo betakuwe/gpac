@@ -168,6 +168,7 @@ ifeq ($(DISABLE_PLAYER), yes)
 PLUGDIRS=
 endif
 
+PLUGDIRS+=opengazer
 
 all: plugs
 

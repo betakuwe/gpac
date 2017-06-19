@@ -299,6 +299,9 @@ struct __tag_compositor
 	Bool is_opengl;
 	Bool autoconfig_opengl;
 	u32 force_opengl_2d;
+
+	/* Opengazer */
+	u32 gazeX, gazeY;
 #ifdef OPENGL_RASTER
 	Bool opengl_raster;
 #endif
@@ -586,6 +589,7 @@ struct __tag_compositor
 	/*display depth in pixels - if -1, it is the height of the display area*/
 	s32 display_depth;
 #endif
+
 };
 
 typedef struct
