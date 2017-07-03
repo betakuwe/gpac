@@ -415,7 +415,8 @@ void gf_sc_texture_disable(GF_TextureHandler *txh)
 //			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(txh->tx_io->gl_type, 0);
 
-			GF_LOG(GF_LOG_DEBUG, GF_LOG_MEDIA, ("[GL Texture] Texture drawn (CTS %u)\n", txh->last_frame_time));
+
+GF_LOG(GF_LOG_DEBUG, GF_LOG_MEDIA, ("[GL Texture] Texture drawn (CTS %u)  gazeX %u gazeY %u \n", txh->last_frame_time,txh->compositor->gazeX,txh->compositor->gazeY ));
 
 		}
 #endif
