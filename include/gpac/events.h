@@ -56,7 +56,8 @@ enum
 {
 	GF_MOUSE_LEFT = 0,
 	GF_MOUSE_MIDDLE,
-	GF_MOUSE_RIGHT
+	GF_MOUSE_RIGHT,
+	GF_MOUSE_FACE,
 };
 
 /*event proc return value: ignored*/

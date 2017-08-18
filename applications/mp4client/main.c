@@ -646,7 +646,7 @@ Bool GPAC_EventProc(void *ptr, GF_Event *evt)
 
 
 	case GF_EVENT_DBLCLICK:
-		gf_term_set_option(term, GF_OPT_FULLSCREEN, !gf_term_get_option(term, GF_OPT_FULLSCREEN));
+		//gf_term_set_option(term, GF_OPT_FULLSCREEN, !gf_term_get_option(term, GF_OPT_FULLSCREEN));
 		return 0;
 
 	case GF_EVENT_MOUSEDOWN:

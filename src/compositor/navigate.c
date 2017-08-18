@@ -340,8 +340,8 @@ static void handle_mouse_move_3d(GF_Compositor *compositor, GF_Camera *cam, u32 
 
 static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event *ev)
 {
-	Fixed x, y, trans_scale;
-	Fixed dx, dy, key_trans, key_pan, key_exam;
+	Fixed xf, yf, xm, ym, trans_scale;
+	Fixed dxf, dyf, dxm, dym, key_trans, key_pan, key_exam;
 	s32 key_inv;
 	u32 keys;
 	GF_Camera *cam;
@@ -363,15 +363,19 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 
 	keys = compositor->key_states;
 	if (!cam->navigate_mode && !(keys & GF_KEY_MOD_ALT) ) return 0;
-	x = y = 0;
+	xf = yf = xm = ym = 0;
 	/*renorm between -1, 1*/
 	if (ev->type<=GF_EVENT_MOUSEWHEEL) {
-		x = gf_divfix( INT2FIX(ev->mouse.x - (s32) compositor->visual->width/2), INT2FIX(compositor->visual->width));
-		y = gf_divfix( INT2FIX(ev->mouse.y - (s32) compositor->visual->height/2), INT2FIX(compositor->visual->height));
+		xm = gf_divfix( INT2FIX(ev->mouse.x - (s32) compositor->visual->width/2), INT2FIX(compositor->visual->width));
+		ym = gf_divfix( INT2FIX(ev->mouse.y - (s32) compositor->visual->height/2), INT2FIX(compositor->visual->height));
+		xf =gf_divfix( INT2FIX(compositor->gazeX * (s32) compositor->visual->width / 640.0f - (s32) compositor->visual->width/2), INT2FIX(compositor->visual->width));
+		yf =gf_divfix( INT2FIX(compositor->gazeY * (s32) compositor->visual->height / 480.0f - (s32) compositor->visual->height/2), INT2FIX(compositor->visual->height));
 	}
 
-	dx = (x - compositor->grab_x);
-	dy = (compositor->grab_y - y);
+	dxf = (xf - compositor->grab_x);
+	dyf = (compositor->grab_y - yf);
+	dxm = (xm - compositor->grab_x);
+	dym = (compositor->grab_y - ym);
 
 	trans_scale = cam->width/20;
 	key_trans = cam->avatar_size.x/2;
@@ -382,13 +386,15 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 		key_trans = cam->world_bbox.radius / 100;
 	}
 
-	key_pan = FIX_ONE/25;
-	key_exam = FIX_ONE/20;
+	key_pan = FIX_ONE/250;
+	key_exam = FIX_ONE/250;
 	key_inv = 1;
 
 	if (keys & GF_KEY_MOD_SHIFT) {
-		dx *= 4;
-		dy *= 4;
+		dxf *= 4;
+		dyf *= 4;
+		dxm *= 4;
+		dym *= 4;
 		key_pan *= 4;
 		key_exam *= 4;
 		key_trans*=4;
@@ -397,9 +403,16 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 	switch (ev->type) {
 	case GF_EVENT_MOUSEDOWN:
 		/*left*/
-		if (ev->mouse.button==GF_MOUSE_LEFT) {
-			compositor->grab_x = x;
-			compositor->grab_y = y;
+		if(ev->mouse.button==GF_MOUSE_LEFT) compositor->mouse = 1;
+
+		if (ev->mouse.button==GF_MOUSE_LEFT || ev->mouse.button==GF_MOUSE_FACE) {
+			if (compositor->facenavig==1){
+				compositor->grab_x = xf;
+				compositor->grab_y = yf;
+			}else{
+				compositor->grab_x = xm;
+				compositor->grab_y = ym;
+			}
 			compositor->navigation_state = 1;
 
 			/*change vp and examine center to current location*/
@@ -428,8 +441,13 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 		if (!compositor->navigation_state) {
 			if (cam->navigate_mode==GF_NAVIGATE_GAME) {
 				/*init mode*/
-				compositor->grab_x = x;
-				compositor->grab_y = y;
+				if (compositor->facenavig==1){
+					compositor->grab_x = xf;
+					compositor->grab_y = yf;
+				}else/* if (ev->mouse.button==GF_MOUSE_FACE)*/{
+					compositor->grab_x = xm;
+					compositor->grab_y = ym;
+				}
 				compositor->navigation_state = 1;
 			}
 			compositor->auto_rotate=0;
@@ -437,16 +455,29 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 		}
 		compositor->navigation_state++;
 
-		if (x <= -0.49) compositor->auto_rotate = 1;
-		else if (x >= 0.49) compositor->auto_rotate = 2;
-		else if (y <= -0.49) compositor->auto_rotate = 3;
-		else if (y >= 0.49) compositor->auto_rotate = 4;
-		else compositor->auto_rotate = 0;
+		if (compositor->facenavig==1){
+			if (xf <= -0.49) compositor->auto_rotate = 1;
+			else if (xf >= 0.49) compositor->auto_rotate = 2;
+			else if (yf <= -0.49) compositor->auto_rotate = 3;
+			else if (yf >= 0.49) compositor->auto_rotate = 4;
+			else compositor->auto_rotate = 0;
 
-		handle_mouse_move_3d(compositor, cam, keys, dx, dy);
+			handle_mouse_move_3d(compositor, cam, keys, dxf, dyf);
 
-		compositor->grab_x = x;
-		compositor->grab_y = y;
+			compositor->grab_x = xf;
+			compositor->grab_y = yf;
+		}else /*if (ev->mouse.button==GF_MOUSE_FACE)*/{
+			if (xm <= -0.49) compositor->auto_rotate = 1;
+			else if (xm >= 0.49) compositor->auto_rotate = 2;
+			else if (ym <= -0.49) compositor->auto_rotate = 3;
+			else if (ym >= 0.49) compositor->auto_rotate = 4;
+			else compositor->auto_rotate = 0;
+
+			handle_mouse_move_3d(compositor, cam, keys, dxm, dym);
+
+			compositor->grab_x = xm;
+			compositor->grab_y = ym;
+		}
 		return 1;
 
 	case GF_EVENT_MOUSEWHEEL:
@@ -470,10 +501,11 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 			}
 		}
 		return 1;
-
 	case GF_EVENT_MOUSEUP:
+		compositor->facenavig = 1;
+		compositor->mouse = 0;
 		compositor->auto_rotate=0;
-		if (ev->mouse.button==GF_MOUSE_LEFT) compositor->navigation_state = 0;
+		if (ev->mouse.button==GF_MOUSE_LEFT  || ev->mouse.button==GF_MOUSE_FACE) compositor->navigation_state = 0;
 		break;
 
 	case GF_EVENT_KEYDOWN:
@@ -523,15 +555,14 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 				}
 				return 0;
 			}
-
-
 			switch (cam->navigate_mode) {
 			case GF_NAVIGATE_SLIDE:
 				if (keys & GF_KEY_MOD_CTRL) view_pan_x(compositor, cam, key_inv * key_pan);
 				else view_translate_x(compositor, cam, key_inv * key_trans);
+
 				break;
 			case GF_NAVIGATE_EXAMINE:
-				if (keys & GF_KEY_MOD_CTRL) view_roll(compositor, cam, gf_mulfix(dx, trans_scale));
+				if (keys & GF_KEY_MOD_CTRL) view_roll(compositor, cam, gf_mulfix(dxm, trans_scale));
 				else view_exam_x(compositor, cam, -key_inv * key_exam);
 				break;
 			case GF_NAVIGATE_ORBIT:
@@ -710,7 +741,7 @@ static Bool compositor_handle_navigation_2d(GF_VisualManager *visual, GF_Event *
 	switch (ev->type) {
 	case GF_EVENT_MOUSEDOWN:
 		/*left*/
-		if (ev->mouse.button==GF_MOUSE_LEFT) {
+		if (ev->mouse.button==GF_MOUSE_LEFT || ev->mouse.button==GF_MOUSE_FACE) {
 			visual->compositor->grab_x = x;
 			visual->compositor->grab_y = y;
 			visual->compositor->navigation_state = 1;
@@ -725,7 +756,7 @@ static Bool compositor_handle_navigation_2d(GF_VisualManager *visual, GF_Event *
 		break;
 
 	case GF_EVENT_MOUSEUP:
-		if (ev->mouse.button==GF_MOUSE_LEFT) {
+		if (ev->mouse.button==GF_MOUSE_LEFT || ev->mouse.button==GF_MOUSE_FACE) {
 			visual->compositor->navigation_state = 0;
 			return 0;
 		}

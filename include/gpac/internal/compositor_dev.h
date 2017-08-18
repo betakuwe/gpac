@@ -201,6 +201,10 @@ struct __tag_compositor
 	/*compositor exclusive access to the scene and display*/
 	GF_Mutex *mx;
 
+	Bool face;
+	Bool mouse;
+	Bool facenavig;
+
 	/*list of modules containing hardcoded proto implementations*/
 	GF_List *proto_modules;
 
