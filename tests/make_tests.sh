@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#for user doc, check scripts/00-template
+#for user  doc, check scripts/00-template
 
 base_args=""
 
