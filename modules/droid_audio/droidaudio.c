@@ -31,15 +31,15 @@
 #include <math.h>
 
 #define STREAM_MUSIC 3
-#define CHANNEL_CONFIGURATION_MONO 2
-#define CHANNEL_CONFIGURATION_STEREO 3
+
 #define ENCODING_PCM_8BIT 3
+#define CHANNEL_OUT_MONO 4
+#define CHANNEL_OUT_STEREO 12
+#define CHANNEL_OUT_QUAD 204
+#define CHANNEL_OUT_5POINT1 252
+#define CHANNEL_OUT_7POINT1 1020
 #define ENCODING_PCM_16BIT 2
 #define MODE_STREAM 1
-#define CHANNEL_OUT_MONO 4
-#define CHANNEL_IN_STEREO 12
-#define CHANNEL_IN_MONO 16
-
 
 /*for channel codes*/
 #include <gpac/constants.h>
@@ -69,7 +69,7 @@ static jmethodID mWriteS;
 static jmethodID mFlush;
 
 #include <android/log.h>
-#define TAG "GPAC Android Audio"
+#define TAG "GPAC_Android_Audio"
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, TAG,  __VA_ARGS__)
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, TAG,  __VA_ARGS__)
 #define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, TAG,  __VA_ARGS__)
@@ -94,9 +94,11 @@ typedef struct
 	u32 cfg_num_buffers, cfg_duration;
 
 	u32 sampleRateInHz;
-	u32 channelConfig; //AudioFormat.CHANNEL_OUT_MONO
+	u32 channelConfig;
+	u32 channelConfigOut; //AudioFormat.CHANNEL_OUT_MONO
 	u32 audioFormat; //AudioFormat.ENCODING_PCM_16BIT
 	s32 mbufferSizeInBytes;
+	s32 mbufferSizeInBytesOut;
 	u32 volume;
 	u32 pan;
 	jarray buff;
@@ -187,7 +189,24 @@ static GF_Err WAV_ConfigureOutput(GF_AudioOutput *dr, u32 *SampleRate, u32 *NbCh
 	if (!ctx) return GF_BAD_PARAM;
 
 	ctx->sampleRateInHz = *SampleRate;
-	ctx->channelConfig = (*NbChannels == 1) ? CHANNEL_CONFIGURATION_MONO : CHANNEL_CONFIGURATION_STEREO; //AudioFormat.CHANNEL_CONFIGURATION_MONO
+	switch(*NbChannels){
+	case(1):
+		ctx->channelConfig = CHANNEL_OUT_MONO;
+		break;
+	case(4):
+		ctx->channelConfig = CHANNEL_OUT_QUAD;
+		break;
+	case(6):
+		ctx->channelConfig = CHANNEL_OUT_5POINT1;
+		break;
+	case(8):
+		ctx->channelConfig = CHANNEL_OUT_7POINT1;
+		break;
+	default:
+		ctx->channelConfig = CHANNEL_OUT_STEREO;
+		break;
+	}
+	ctx->channelConfigOut = (*NbChannels == 1) ? CHANNEL_OUT_MONO : CHANNEL_OUT_STEREO;
 	ctx->audioFormat = (*nbBitsPerSample == 8)? ENCODING_PCM_8BIT : ENCODING_PCM_16BIT; //AudioFormat.ENCODING_PCM_16BIT
 
 	// Get the java environment in the new thread
@@ -201,26 +220,26 @@ static GF_Err WAV_ConfigureOutput(GF_AudioOutput *dr, u32 *SampleRate, u32 *NbCh
 	ctx->num_buffers = 1;
 	ctx->mbufferSizeInBytes = (*env)->CallStaticIntMethod(env, cAudioTrack, mGetMinBufferSize,
 	                          ctx->sampleRateInHz, ctx->channelConfig, ctx->audioFormat);
-
+	ctx->mbufferSizeInBytesOut = (u32) (2 * ctx->mbufferSizeInBytes / *NbChannels);
 	//ctx->mbufferSizeInBytes *= 3;
 
-	LOGV("[Android Audio] Buffer Size : %d", ctx->mbufferSizeInBytes);
+	LOGV("[Android Audio] Buffer Size : %d", ctx->mbufferSizeInBytesOut);
 
 	i = 1;
-	if ( ctx->channelConfig == CHANNEL_CONFIGURATION_STEREO )
+	if ( ctx->channelConfigOut == CHANNEL_OUT_STEREO )
 		i *= 2;
 	if ( ctx->audioFormat == ENCODING_PCM_16BIT )
 		i *= 2;
 
-	ctx->total_length_ms =  1000 * ctx->num_buffers * ctx->mbufferSizeInBytes / i / ctx->sampleRateInHz;
+	ctx->total_length_ms =  1000 * ctx->num_buffers * ctx->mbufferSizeInBytesOut / i / ctx->sampleRateInHz;
 
-	LOGV("[Android Audio] Buffer Length ms : %d", ctx->total_length_ms);
+	LOGI("[Android Audio] Buffer Length ms : %d", ctx->total_length_ms);
 
 	/*initial delay is full buffer size*/
 	ctx->delay = ctx->total_length_ms;
 
 	mtrack = (*env)->NewObject(env, cAudioTrack, mAudioTrack, STREAM_MUSIC, ctx->sampleRateInHz,
-	                           ctx->channelConfig, ctx->audioFormat, ctx->mbufferSizeInBytes, MODE_STREAM); //AudioTrack.MODE_STREAM
+	                           ctx->channelConfigOut, ctx->audioFormat, ctx->mbufferSizeInBytesOut, MODE_STREAM); //AudioTrack.MODE_STREAM
 	if (mtrack) {
 		mtrack = (*env)->NewGlobalRef(env, mtrack);
 		ctx->mtrack = mtrack;
@@ -278,9 +297,9 @@ static void WAV_WriteAudio(GF_AudioOutput *dr)
 		if (written)
 		{
 			if ( ctx->audioFormat == ENCODING_PCM_8BIT )
-				(*env)->CallNonvirtualIntMethod(env, mtrack, cAudioTrack, mWriteB, ctx->buff, 0, ctx->mbufferSizeInBytes);
+				(*env)->CallNonvirtualIntMethod(env, mtrack, cAudioTrack, mWriteB, ctx->buff, 0, ctx->mbufferSizeInBytesOut);
 			else
-				(*env)->CallNonvirtualIntMethod(env, mtrack, cAudioTrack, mWriteS, ctx->buff, 0, ctx->mbufferSizeInBytes/2);
+				(*env)->CallNonvirtualIntMethod(env, mtrack, cAudioTrack, mWriteS, ctx->buff, 0, ctx->mbufferSizeInBytesOut/2);
 		}
 	}
 	else
@@ -366,12 +385,12 @@ static GF_Err WAV_QueryOutputSampleRate(GF_AudioOutput *dr, u32 *desired_sampler
 
 #ifdef TEST_QUERY_SAMPLE
 	sampleRateInHz = *desired_samplerate;
-	channelConfig = (*NbChannels == 1) ? CHANNEL_CONFIGURATION_MONO : CHANNEL_CONFIGURATION_STEREO;
+	channelConfig = (*NbChannels == 1) ? CHANNEL_OUT_MONO : CHANNEL_OUT_STEREO;
 	audioFormat = (*nbBitsPerSample == 8)? ENCODING_PCM_8BIT : ENCODING_PCM_16BIT;
 
-	LOGV3("[Android Audio] Query: SampleRate ChannelConfig AudioFormat: %d %d %d \n",
+	LOGV("[Android Audio] Query: SampleRate ChannelConfig AudioFormat: %d %d %d \n",
 	      sampleRateInHz,
-	      (channelConfig == CHANNEL_CONFIGURATION_MONO)? 1 : 2,
+	      (channelConfig == CHANNEL_OUT_MONO)? 1 : 2,
 	      (ctx->audioFormat == ENCODING_PCM_8BIT)? 8 : 16);
 
 	switch (*desired_samplerate) {

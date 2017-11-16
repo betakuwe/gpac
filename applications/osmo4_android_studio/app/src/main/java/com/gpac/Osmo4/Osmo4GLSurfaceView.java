@@ -16,6 +16,7 @@ import android.widget.Toast;
 public class Osmo4GLSurfaceView extends GLSurfaceView implements GPACInstanceInterface {
 
     private final static String LOG_GL_SURFACE = Osmo4GLSurfaceView.class.getSimpleName();
+    private Toast toast = Toast.makeText(Osmo4.context, "Press back button twice to exit", Toast.LENGTH_SHORT);
 
     /**
      * Constructor
@@ -103,7 +104,7 @@ public class Osmo4GLSurfaceView extends GLSurfaceView implements GPACInstanceInt
 
     @Override
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
-	if (keyCode == KeyEvent.KEYCODE_BACK) Toast.makeText(Osmo4.context, "Press back button twice to exit", Toast.LENGTH_SHORT).show();
+	if (keyCode == KeyEvent.KEYCODE_BACK) toast.show();
         if (handleInGPAC(keyCode, event)) {
             Log.d(LOG_GL_SURFACE, "onKeyDown = " + keyCode); //$NON-NLS-1$
             queueEvent(new Runnable() {
@@ -123,6 +124,7 @@ public class Osmo4GLSurfaceView extends GLSurfaceView implements GPACInstanceInt
     // ------------------------------------
     @Override
     public boolean onKeyUp(final int keyCode, final KeyEvent event) {
+	if (keyCode == KeyEvent.KEYCODE_BACK) toast.cancel();
         if (handleInGPAC(keyCode, event)) {
             Log.d(LOG_GL_SURFACE, "onKeyUp =" + keyCode); //$NON-NLS-1$
 	    if (keyCode == KeyEvent.KEYCODE_BACK) mBackPressed = System.currentTimeMillis();

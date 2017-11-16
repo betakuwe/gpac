@@ -455,6 +455,15 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 
 		compositor->grab_x = x;
 		compositor->grab_y = y;
+
+		if (compositor->isTelevision || !gf_term_get_option(compositor->term, GF_OPT_ORIENTATION_SENSORS_ACTIVE)){
+			Fixed yaw, pitch, roll;
+			gf_mx_get_yaw_pitch_roll(&compositor->visual->camera.modelview, &yaw, &pitch, &roll);
+			compositor->audio_renderer->yaw = yaw;
+			compositor->audio_renderer->pitch = pitch;
+			compositor->audio_renderer->roll = roll;
+		}
+
 		return 1;
 
 	case GF_EVENT_MOUSEWHEEL:
@@ -634,7 +643,7 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 		break;
 	case GF_EVENT_SENSOR_ORIENTATION:
 	{
-		Fixed x, y, z, w, yaw, /*pitch, */roll;
+		Fixed x, y, z, w, yaw, pitch, roll;
 		GF_Vec target;
 		GF_Matrix mx;
 
@@ -644,9 +653,9 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 			y = ev->sensor.y;
 			z = ev->sensor.z;
 			w = ev->sensor.w;
-		
+
 			yaw = gf_atan2(2*gf_mulfix(z,w) - 2*gf_mulfix(y,x) , 1 - 2*gf_mulfix(z,z) - 2*gf_mulfix(x,x));
-			//pitch = asin(2*y*z + 2*x*w);
+			pitch = asin(2*y*z + 2*x*w);
 			roll = gf_atan2(2*gf_mulfix(y,w) - 2*gf_mulfix(z,x) , 1 - 2*gf_mulfix(y,y) - 2*gf_mulfix(x,x));
 		} else {
 			/*
@@ -654,16 +663,23 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 			 * The frame of reference is absolute
 			 */
 			yaw = ev->sensor.x;
-			//pitch = ev->sensor.y;
+			pitch = ev->sensor.y;
 			roll = ev->sensor.z;
 		}
+
+		if (!compositor->isTelevision && gf_term_get_option(compositor->term, GF_OPT_ORIENTATION_SENSORS_ACTIVE)){
+			compositor->audio_renderer->yaw = yaw;
+			compositor->audio_renderer->pitch = pitch;
+			compositor->audio_renderer->roll = roll;
+		}
+
 		target.x = 0;
 		target.y = -FIX_ONE;
 		target.z = 0;
 		gf_mx_init(mx);
 		gf_mx_add_rotation(&mx, yaw, 0, FIX_ONE, 0);
 		gf_mx_add_rotation(&mx, -roll, FIX_ONE, 0, 0);
-		
+
 		gf_mx_apply_vec(&mx, &target);
 
 		cam->target = target;

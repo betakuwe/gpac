@@ -700,6 +700,36 @@ void CNativeWrapper::SetupLogs() {
 	}*/
 }
 //-------------------------------
+jobject getPackageManager (JNIEnv* env, jobject activity) {
+const jclass		activityCls		= env->GetObjectClass(activity);
+const jmethodID		getPMID			= env->GetMethodID(activityCls, "getPackageManager", "()Landroid/content/pm/PackageManager;");
+const jobject		packageManager	= env->CallObjectMethod(activity, getPMID);
+
+return packageManager;
+}
+
+class LocalRef {
+public:
+LocalRef(JNIEnv* env, jobject ref);
+~LocalRef(void);
+jobject			operator*		(void) const { return m_ref;	} 	operator		bool			(void) const { return !!m_ref;	}
+
+private:
+LocalRef(const LocalRef&);
+LocalRef& operator=(const LocalRef&);
+JNIEnv* const	m_env;
+const jobject	m_ref;
+};
+
+LocalRef::LocalRef (JNIEnv* env, jobject ref)
+	: m_env(env)
+	, m_ref(ref)
+{
+}
+LocalRef::~LocalRef(void){
+	if (m_ref) m_env->DeleteLocalRef(m_ref);
+}
+//-------------------------------
 // dir should end with /
 int CNativeWrapper::init(JNIEnv * env, void * bitmap, jobject * callback, int width, int height, const char * cfg_dir, const char * modules_dir, const char * cache_dir, const char * font_dir, const char * gui_dir, const char * urlToLoad) {
 	LOGI("Initializing GPAC with URL=%s...", urlToLoad);
@@ -748,6 +778,19 @@ int CNativeWrapper::init(JNIEnv * env, void * bitmap, jobject * callback, int wi
 	strcat(vertex_path, "/../shaders/vertex.glsl");
 	strcat(fragment_path, "/../shaders/fragment.glsl");
 
+	LocalRef packageManager (env, getPackageManager(env, *callback));
+	jclass pmCls = env->GetObjectClass(*packageManager);
+	jmethodID hasFeatureID	= env->GetMethodID(pmCls, "hasSystemFeature", "(Ljava/lang/String;)Z");
+
+	bool television = env->CallBooleanMethod(getPackageManager(env, *callback), hasFeatureID,env->NewStringUTF("android.hardware.type.television")) || env->CallBooleanMethod(getPackageManager(env, *callback), hasFeatureID,env->NewStringUTF("android.software.leanback"));
+
+	if (television){
+		gf_cfg_set_key(m_user.config, "General", "isTelevision", "yes");
+		//gf_cfg_set_key(m_user.config, "Audio", "DisableMultiChannel", "no");
+	}else{
+		gf_cfg_set_key(m_user.config, "General", "isTelevision", "no");
+		//gf_cfg_set_key(m_user.config, "Audio", "DisableMultiChannel", "yes");
+	}
 	gf_cfg_set_key(m_user.config, "Compositor", "VertexShader", vertex_path);
 	gf_cfg_set_key(m_user.config, "Compositor", "FragmentShader", fragment_path);
 	gf_cfg_set_key(m_user.config, "Compositor", "OpenGLMode", "hybrid");

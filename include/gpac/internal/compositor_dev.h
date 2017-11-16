@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/*Arkamys API*/
+#include "../../../extra_lib/include/Arkamys_VRPLAY-v109/Arkamys.h"
+#include "../../../extra_lib/include/Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h"
+
 #include <gpac/compositor.h>
 /*include scene graph API*/
 #include <gpac/thread.h>
@@ -297,12 +301,13 @@ struct __tag_compositor
 	u32 aspect_ratio, antiAlias, texture_text_mode;
 	Bool high_speed, stress_mode;
 	Bool is_opengl;
+	Bool isTelevision;
 	Bool autoconfig_opengl;
 	u32 force_opengl_2d;
 #ifdef OPENGL_RASTER
 	Bool opengl_raster;
 #endif
-	
+
 	//in this mode all 2D raster is done through and RGBA canvas except background IO and textures which are done by the GPU. The canvas is then flushed to GPU.
 	//the mode supports defer and immediate rendering
 	Bool hybrid_opengl;
@@ -820,8 +825,8 @@ struct _traversing_state
 	Bool immediate_draw;
 	//flag set when immediate_draw whn in defer mode, so that canvas is not erased in hybgl mode
 	Bool immediate_for_defer;
-	
-	
+
+
 	/*current subtree is part of a switched-off subtree (needed for audio)*/
 	Bool switched_off;
 	/*set by the traversed subtree to indicate no cull shall be performed*/
@@ -1136,6 +1141,8 @@ typedef struct _audio_render
 
 	Fixed yaw, pitch, roll;
 
+	ARKAMYS_HANDLE audioFx;
+
 } GF_AudioRenderer;
 
 /*creates audio renderer*/
@@ -1224,7 +1231,7 @@ Bool gf_sc_audio_check_url(GF_AudioInput *ai, MFURL *url);
 #define AUDIO_GROUP_NODE	\
 	GF_AudioInput output;		\
 	void (*add_source)(struct _audio_group *_this, GF_AudioInput *src);	\
- 
+
 typedef struct _audio_group
 {
 	AUDIO_GROUP_NODE

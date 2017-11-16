@@ -1594,7 +1594,11 @@ void gf_sc_reload_config(GF_Compositor *compositor)
 	if (!sOpt) gf_cfg_set_key(compositor->user->config, "Compositor", "SimulateGaze", "no");
 	compositor->simulate_gaze = (sOpt && !strcmp(sOpt, "yes")) ? GF_TRUE : GF_FALSE;
 	if (compositor->simulate_gaze) compositor->gazer_enabled = GF_TRUE;
-
+ 
+#ifdef GPAC_ANDROID
+	sOpt = gf_cfg_get_key(compositor->user->config, "General", "isTelevision");
+	compositor->isTelevision = (sOpt && !strcmp(sOpt, "yes")) ? 1 : 0;
+#endif
 
 	gf_sc_reset_graphics(compositor);
 	gf_sc_next_frame_state(compositor, GF_SC_DRAW_FRAME);

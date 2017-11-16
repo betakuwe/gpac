@@ -1567,6 +1567,7 @@ void gf_mx_get_yaw_pitch_roll(GF_Matrix *mx, Fixed *yaw, Fixed *pitch, Fixed *ro
 	Fixed locmat[16];
 	assert(mx->m[15]);
 	memcpy(locmat, mx->m, sizeof(Fixed)*16);
+
 	*pitch = (Float) atan(locmat[4]/locmat[0]);
 	*yaw = (Float) atan(-locmat[8]/gf_sqrt(pow(locmat[9],2) + pow(locmat[10],2)));
 	*roll = (Float) atan(locmat[9]/locmat[10]);

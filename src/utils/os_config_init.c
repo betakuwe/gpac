@@ -541,6 +541,7 @@ static GF_Config *create_default_config(char *file_path)
 	gf_cfg_set_key(cfg, "Audio", "NumBuffers", "2");
 	gf_cfg_set_key(cfg, "Audio", "TotalDuration", "120");
 	gf_cfg_set_key(cfg, "Audio", "DisableNotification", "no");
+	gf_cfg_set_key(cfg, "Audio", "DisableMultiChannel", "no");
 
 	/*Setup font engine to FreeType by default, and locate TrueType font directory on the system*/
 	gf_cfg_set_key(cfg, "FontEngine", "FontReader", "FreeType Font Reader");

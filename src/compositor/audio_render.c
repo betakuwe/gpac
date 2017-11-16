@@ -24,6 +24,8 @@
  */
 
 #include <gpac/internal/compositor_dev.h>
+#include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
+#include <Arkamys_VRPLAY-v109/Arkamys.h>
 
 GF_Err gf_afc_load(GF_AudioFilterChain *afc, GF_User *user, char *filterstring)
 {
@@ -225,6 +227,41 @@ void gf_afc_reset(GF_AudioFilterChain *afc)
 	}
 }
 
+static GF_Err gf_ar_Arkamys_init(GF_AudioRenderer *ar, u32 nb_chan){
+
+	ARKAMYS_HANDLE audioFx;
+
+	int inputMode;
+	int allocSize;
+
+	// Input mode definition
+	switch(nb_chan){
+	case 4:
+		inputMode = ARKAMYS_AMBI_INPUT;
+		break;
+	case 6:
+		inputMode = ARKAMYS_51_INPUT;
+		break;
+	case 8:
+		inputMode = ARKAMYS_71_INPUT;
+		break;
+	default:
+		inputMode = ARKAMYS_STEREO_INPUT;
+		break;
+	}
+
+	// Memory alloc
+	allocSize = ArkamysAudio360RenderingGetMemSize(inputMode);
+	audioFx = (ARKAMYS_HANDLE)malloc(allocSize);
+
+	// Config
+	ArkamysAudio360RenderingConfig(audioFx, inputMode);
+	ArkamysAudio360RenderingInit(audioFx);
+
+	ar->audioFx = audioFx;
+
+	return GF_OK;
+}
 
 static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 {
@@ -233,6 +270,8 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 	u32 in_ch, in_cfg, in_bps, in_freq;
 
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
+
+	gf_ar_Arkamys_init(ar, nb_chan);
 
 	/*user disabled multichannel audio*/
 	if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
@@ -391,6 +430,63 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 	return 0;
 }
 
+static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
+{
+	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, nb_chan_out=2;
+	Fixed pitch, yaw, roll;
+	Fixed x, y, z, w;
+
+	GF_AudioRenderer *ar = (GF_AudioRenderer *) ptr;
+	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
+
+	s_size = nb_bits / 8;
+	samples_per_chan = buffer_size / s_size;
+	samples = samples_per_chan / nb_chan;
+
+	float * inputBuffer = (float *) malloc(samples*nb_chan*sizeof(float));
+	float * outputBuffer = (float *) malloc(samples*2*sizeof(float));
+
+	gf_ar_fill_output(ptr, buffer, buffer_size);
+
+	for (i=0; i<samples*nb_chan; i++) {
+		Float v;
+		if (s_size==2) {
+			v = (float) (((s16 *) buffer)[i]);
+			v /= 32767.0f;
+		} else {
+			v = (float) ((s8 *) buffer)[i];
+			v /= 127.0f;
+		}
+		//v = MAX(v, -1.0f);
+		//v = MIN(v,  1.0f);
+		inputBuffer[i] = v;
+	}
+
+	pitch = (int) (ar->pitch*180/GF_PI);
+	yaw = (int) (ar->yaw*180/GF_PI);
+	roll = (int) (ar->roll*180/GF_PI);
+
+	ArkamysAudio360RenderingSetRotation(ar->audioFx, pitch, yaw, roll);
+
+	ArkamysAudio360RenderingProcess(ar->audioFx, inputBuffer, outputBuffer, samples);
+
+	for (i=0; i<samples*2; i++) {
+		Float v = outputBuffer[i];
+		if (s_size==2) {
+			v = v * 32767.0f;
+			v = MAX(v, -32767.0f);
+			v = MIN(v,  32767.0f);
+			((s16 *) buffer)[i] = (s16) v;
+		} else {
+			v = v * 127.0f;
+			v = MAX(v, -127.0f);
+			v = MIN(v,  127.0f);
+			((s8 *) buffer)[i] = (s8) v;
+		}
+	}
+	return buffer_size;
+}
+
 void gf_sc_flush_next_audio(GF_Compositor *compositor)
 {
 	if (!compositor->audio_renderer->audio_out)
@@ -524,7 +620,11 @@ GF_AudioRenderer *gf_sc_ar_load(GF_User *user)
 
 		/*if not init we run with a NULL audio compositor*/
 		if (ar->audio_out) {
+#ifdef GPAC_ANDROID
+			ar->audio_out->FillBuffer = gf_ar_fill_output_Arkamys;
+#else
 			ar->audio_out->FillBuffer = gf_ar_fill_output;
+#endif
 			ar->audio_out->audio_renderer = ar;
 			GF_LOG(GF_LOG_DEBUG, GF_LOG_AUDIO, ("[AudioRender] Setting up audio module %s\n", ar->audio_out->module_name));
 			e = ar->audio_out->Setup(ar->audio_out, ar->user->os_window_handler, num_buffers, total_duration);
