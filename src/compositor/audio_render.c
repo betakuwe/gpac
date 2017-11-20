@@ -24,10 +24,10 @@
  */
 
 #include <gpac/internal/compositor_dev.h>
-#include <ArkamysAudio360Rendering.h>
-#include <Arkamys.h>
+#include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
+#include <Arkamys_VRPLAY-v109/Arkamys.h>
 
-# pragma comment(lib, "ArkamysVRPlay")
+#pragma comment(lib, "ArkamysVRPlay")
 
 GF_Err gf_afc_load(GF_AudioFilterChain *afc, GF_User *user, char *filterstring)
 {
