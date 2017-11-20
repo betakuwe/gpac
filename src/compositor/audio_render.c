@@ -24,10 +24,10 @@
  */
 
 #include <gpac/internal/compositor_dev.h>
-//#include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
-//#include <Arkamys_VRPLAY-v109/Arkamys.h>
+#include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
+#include <Arkamys_VRPLAY-v109/Arkamys.h>
 
-#  pragma comment(lib, "ArkamysVRPlay")
+# pragma comment(lib, "ArkamysVRPlay")
 
 GF_Err gf_afc_load(GF_AudioFilterChain *afc, GF_User *user, char *filterstring)
 {
@@ -444,10 +444,9 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 
 static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 {
-	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, nb_chan_out = 2, bytes_written, tmp_buffer_size;
+	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, bytes_written, tmp_buffer_size;
 	Fixed pitch, yaw, roll;
-	Fixed x, y, z, w;
-	
+
 	GF_AudioRenderer *ar = (GF_AudioRenderer *)ptr;
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
 	
