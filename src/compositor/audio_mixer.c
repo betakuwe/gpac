@@ -280,6 +280,8 @@ Bool gf_mixer_reconfig(GF_AudioMixer *am)
 		if (has_cfg) {
 			/*check same cfg...*/
 			if (in->src->samplerate * in->src->chan * in->src->bps == 8*in->bytes_per_sec) {
+				if (in->src->forced_layout)
+					ch_cfg |= in->src->ch_cfg;
 				numInit++;
 				continue;
 			}
@@ -304,10 +306,26 @@ Bool gf_mixer_reconfig(GF_AudioMixer *am)
 				cfg_changed = 1;
 				max_channels = in->src->chan;
 				if (in->src->chan>2) ch_cfg |= in->src->ch_cfg;
-			} else if (max_channels < in->src->chan) {
-				cfg_changed = 1;
-				max_channels = in->src->chan;
-				if (in->src->chan>2) ch_cfg |= in->src->ch_cfg;
+			}
+			else {
+				u32 nb_ch = in->src->chan;
+				if (in->src->forced_layout) {
+					u32 cfg = in->src->ch_cfg;
+					nb_ch = 0;
+					while (cfg) {
+						nb_ch++;
+						cfg >>= 1;
+
+					}
+					ch_cfg |= in->src->ch_cfg;
+
+				}
+				if (max_channels < nb_ch) {
+					cfg_changed = 1;
+					max_channels = nb_ch;
+					if (nb_ch > 2) ch_cfg |= in->src->ch_cfg;
+				}
+
 			}
 		}
 
@@ -379,19 +397,28 @@ static GFINLINE void gf_mixer_map_channels(s32 *inChan, u32 nb_in, u32 in_cfg, B
 					idx++;
 				}
 				if (idx) {
-//					inChan[idx] = inChan[0];
-//					inChan[0] = 0;
-					inChan[1] = inChan[0];
-				} else {
-					inChan[1] = inChan[0];
+					inChan[idx] = inChan[0];
+					inChan[0] = 0;
 				}
 			} else {
 				inChan[1] = inChan[0];
 			}
 		}
 		else if (nb_out>2) {
+			if (in_cfg && forced_layout) {
+				u32 idx = 0;
+				while (1) {
+					in_cfg >>= 1;
+					if (!in_cfg) break;
+					idx++;
+				}
+				if (idx) {
+					inChan[idx] = inChan[0];
+					inChan[0] = 0;
+				}
+			}
 			/*if center channel use it (we assume we always have stereo channels)*/
-			if (out_cfg & GF_AUDIO_CH_FRONT_CENTER) {
+			else if (out_cfg & GF_AUDIO_CH_FRONT_CENTER) {
 				inChan[2] = inChan[0];
 				inChan[0] = 0;
 				for (i=3; i<nb_out; i++) inChan[i] = 0;

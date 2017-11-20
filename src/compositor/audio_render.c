@@ -27,6 +27,8 @@
 #include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
 #include <Arkamys_VRPLAY-v109/Arkamys.h>
 
+#  pragma comment(lib, "ArkamysVRPlay")
+
 GF_Err gf_afc_load(GF_AudioFilterChain *afc, GF_User *user, char *filterstring)
 {
 	struct _audiofilterentry *prev_filter = NULL;
@@ -266,7 +268,7 @@ static GF_Err gf_ar_Arkamys_init(GF_AudioRenderer *ar, u32 nb_chan){
 static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 {
 	GF_Err e;
-	u32 freq, nb_bits, nb_chan, ch_cfg;
+	u32 freq, nb_bits, nb_chan, ch_cfg, orig_nb_chan, orig_ch_cfg;
 	u32 in_ch, in_cfg, in_bps, in_freq;
 
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
@@ -276,8 +278,18 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 	/*user disabled multichannel audio*/
 	if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
 
+	gf_ar_Arkamys_init(ar, nb_chan);
+	ar->tmp_buffer = gf_malloc(23040 * nb_chan*(nb_bits / 2) * sizeof(char));
+	ar->inputBuffer = (Float *)gf_malloc(23040 * nb_chan * sizeof(Float));
+	ar->outputBuffer = (Float *)gf_malloc(23040 * 2 * sizeof(Float));
+	
+	orig_nb_chan = nb_chan;
+	orig_ch_cfg = ch_cfg;
+	nb_chan = 2;
+	ch_cfg = GF_AUDIO_CH_FRONT_LEFT | GF_AUDIO_CH_FRONT_RIGHT;
+	
 	in_ch = nb_chan;
-	in_cfg = ch_cfg;
+	in_cfg = orig_ch_cfg;
 	in_bps = nb_bits;
 	in_freq = freq;
 
@@ -315,7 +327,7 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 		}
 		if (e) return e;
 	}
-	gf_mixer_set_config(ar->mixer, freq, nb_chan, nb_bits, in_cfg);
+	gf_mixer_set_config(ar->mixer, freq, orig_nb_chan, nb_bits, in_cfg);
 	ar->audio_delay = ar->audio_out->GetAudioDelay(ar->audio_out);
 
 	ar->audio_out->SetVolume(ar->audio_out, ar->volume);
@@ -432,60 +444,63 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 
 static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 {
-	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, nb_chan_out=2;
+	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, nb_chan_out = 2, bytes_written;
 	Fixed pitch, yaw, roll;
 	Fixed x, y, z, w;
-
-	GF_AudioRenderer *ar = (GF_AudioRenderer *) ptr;
+	
+	GF_AudioRenderer *ar = (GF_AudioRenderer *)ptr;
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
-
+	
 	s_size = nb_bits / 8;
 	samples_per_chan = buffer_size / s_size;
-	samples = samples_per_chan / nb_chan;
-
-	float * inputBuffer = (float *) malloc(samples*nb_chan*sizeof(float));
-	float * outputBuffer = (float *) malloc(samples*2*sizeof(float));
-
-	gf_ar_fill_output(ptr, buffer, buffer_size);
-
-	for (i=0; i<samples*nb_chan; i++) {
+	samples = samples_per_chan / 2;
+	
+	//WATHCOUT output (ie buffer) is stereo, but mixer output is >= stereo - we need a temp buffer to fetch
+	u32 tmp_buffer_size = samples * nb_chan  * s_size;
+	
+	bytes_written = gf_ar_fill_output(ptr, ar->tmp_buffer, tmp_buffer_size);
+	samples = bytes_written / s_size / nb_chan;
+	
+	for (i = 0; i<samples*nb_chan; i++) {
 		Float v;
-		if (s_size==2) {
-			v = (float) (((s16 *) buffer)[i]);
+		if (s_size == 2) {
+			v = (Float)(((s16 *)ar->tmp_buffer)[i]);
 			v /= 32767.0f;
-		} else {
-			v = (float) ((s8 *) buffer)[i];
+		}
+		else {
+			v = (Float)((s8 *)ar->tmp_buffer)[i];
 			v /= 127.0f;
 		}
-		//v = MAX(v, -1.0f);
-		//v = MIN(v,  1.0f);
-		inputBuffer[i] = v;
+		v = MAX(v, -1.0f);
+		v = MIN(v, 1.0f);
+		ar->inputBuffer[i] = v;
 	}
 
-	pitch = (int) (ar->pitch*180/GF_PI);
-	yaw = (int) (ar->yaw*180/GF_PI);
-	roll = (int) (ar->roll*180/GF_PI);
-
+	pitch = (int)(ar->pitch * 180 / GF_PI);
+	yaw = (int)(ar->yaw * 180 / GF_PI);
+	roll = (int)(ar->roll * 180 / GF_PI);
+	
 	ArkamysAudio360RenderingSetRotation(ar->audioFx, pitch, yaw, roll);
-
-	ArkamysAudio360RenderingProcess(ar->audioFx, inputBuffer, outputBuffer, samples);
-
-	for (i=0; i<samples*2; i++) {
-		Float v = outputBuffer[i];
-		if (s_size==2) {
+	ArkamysAudio360RenderingProcess(ar->audioFx, ar->inputBuffer, ar->outputBuffer, samples);
+	
+	for (i = 0; i<samples * 2; i++) {
+		Float v = ar->outputBuffer[i];
+		if (s_size == 2) {
 			v = v * 32767.0f;
 			v = MAX(v, -32767.0f);
-			v = MIN(v,  32767.0f);
-			((s16 *) buffer)[i] = (s16) v;
-		} else {
+			v = MIN(v, 32767.0f);
+			((s16 *)buffer)[i] = (s16)v;
+		}
+		else {
 			v = v * 127.0f;
 			v = MAX(v, -127.0f);
-			v = MIN(v,  127.0f);
-			((s8 *) buffer)[i] = (s8) v;
+			v = MIN(v, 127.0f);
+			((s8 *)buffer)[i] = (s8)v;
 		}
 	}
-	return buffer_size;
+	return samples * s_size * 2;
 }
+
 
 void gf_sc_flush_next_audio(GF_Compositor *compositor)
 {
@@ -620,11 +635,9 @@ GF_AudioRenderer *gf_sc_ar_load(GF_User *user)
 
 		/*if not init we run with a NULL audio compositor*/
 		if (ar->audio_out) {
-#ifdef GPAC_ANDROID
+
 			ar->audio_out->FillBuffer = gf_ar_fill_output_Arkamys;
-#else
-			ar->audio_out->FillBuffer = gf_ar_fill_output;
-#endif
+
 			ar->audio_out->audio_renderer = ar;
 			GF_LOG(GF_LOG_DEBUG, GF_LOG_AUDIO, ("[AudioRender] Setting up audio module %s\n", ar->audio_out->module_name));
 			e = ar->audio_out->Setup(ar->audio_out, ar->user->os_window_handler, num_buffers, total_duration);
@@ -693,6 +706,14 @@ void gf_sc_ar_del(GF_AudioRenderer *ar)
 
 	if (ar->audio_listeners) gf_list_del(ar->audio_listeners);
 	gf_afc_unload(&ar->filter_chain);
+
+	if (ar->inputBuffer) gf_free(ar->inputBuffer);
+	ar->inputBuffer = NULL;
+	if (ar->outputBuffer) gf_free(ar->outputBuffer);
+	ar->outputBuffer = NULL;
+	if (ar->tmp_buffer) gf_free(ar->tmp_buffer);
+	ar->tmp_buffer = NULL;
+
 	gf_free(ar);
 	GF_LOG(GF_LOG_DEBUG, GF_LOG_AUDIO, ("[AudioRender] Renderer destroyed\n"));
 }

@@ -1142,6 +1142,9 @@ typedef struct _audio_render
 	Fixed yaw, pitch, roll;
 
 	ARKAMYS_HANDLE audioFx;
+	char * tmp_buffer;
+	Float * inputBuffer;
+	Float * outputBuffer;
 
 } GF_AudioRenderer;
 
