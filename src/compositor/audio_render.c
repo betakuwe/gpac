@@ -279,7 +279,7 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 	if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
 
 	gf_ar_Arkamys_init(ar, nb_chan);
-	ar->tmp_buffer = gf_malloc(23040 * nb_chan*(nb_bits / 2) * sizeof(char));
+	ar->tmp_buffer = (char *)gf_malloc(23040 * nb_chan*(nb_bits / 2) * sizeof(char));
 	ar->inputBuffer = (Float *)gf_malloc(23040 * nb_chan * sizeof(Float));
 	ar->outputBuffer = (Float *)gf_malloc(23040 * 2 * sizeof(Float));
 	
