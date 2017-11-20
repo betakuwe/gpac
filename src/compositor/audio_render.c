@@ -444,7 +444,7 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 
 static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 {
-	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, nb_chan_out = 2, bytes_written;
+	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, nb_chan_out = 2, bytes_written, tmp_buffer_size;
 	Fixed pitch, yaw, roll;
 	Fixed x, y, z, w;
 	
@@ -456,7 +456,7 @@ static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 	samples = samples_per_chan / 2;
 	
 	//WATHCOUT output (ie buffer) is stereo, but mixer output is >= stereo - we need a temp buffer to fetch
-	u32 tmp_buffer_size = samples * nb_chan  * s_size;
+	tmp_buffer_size = samples * nb_chan  * s_size;
 	
 	bytes_written = gf_ar_fill_output(ptr, ar->tmp_buffer, tmp_buffer_size);
 	samples = bytes_written / s_size / nb_chan;
