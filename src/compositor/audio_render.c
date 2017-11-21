@@ -27,7 +27,7 @@
 #include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
 #include <Arkamys_VRPLAY-v109/Arkamys.h>
 
-#pragma comment(lib, "ArkamysVRPlay")
+#pragma comment(lib, "ArkamysVRPlay.lib")
 
 GF_Err gf_afc_load(GF_AudioFilterChain *afc, GF_User *user, char *filterstring)
 {
@@ -273,8 +273,6 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
 
-	gf_ar_Arkamys_init(ar, nb_chan);
-
 	/*user disabled multichannel audio*/
 	if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
 
@@ -287,7 +285,7 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 	orig_ch_cfg = ch_cfg;
 	nb_chan = 2;
 	ch_cfg = GF_AUDIO_CH_FRONT_LEFT | GF_AUDIO_CH_FRONT_RIGHT;
-	
+
 	in_ch = nb_chan;
 	in_cfg = orig_ch_cfg;
 	in_bps = nb_bits;
@@ -335,7 +333,7 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 
 	ar->time_at_last_config = ar->current_time;
 	ar->bytes_requested = 0;
-	ar->bytes_per_second = freq * nb_chan * nb_bits / 8;
+	ar->bytes_per_second = freq * orig_nb_chan * nb_bits / 8;
 
 	if (ar->audio_listeners) {
 		u32 k=0;
@@ -445,7 +443,7 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 {
 	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, bytes_written, tmp_buffer_size;
-	Fixed pitch, yaw, roll;
+	int pitch, yaw, roll;
 
 	GF_AudioRenderer *ar = (GF_AudioRenderer *)ptr;
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
@@ -459,26 +457,28 @@ static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 	
 	bytes_written = gf_ar_fill_output(ptr, ar->tmp_buffer, tmp_buffer_size);
 	samples = bytes_written / s_size / nb_chan;
-	
+
 	for (i = 0; i<samples*nb_chan; i++) {
 		Float v;
 		if (s_size == 2) {
-			v = (Float)(((s16 *)ar->tmp_buffer)[i]);
+			v = (Float)( ((s16 *) ar->tmp_buffer) [i]);
 			v /= 32767.0f;
 		}
 		else {
 			v = (Float)((s8 *)ar->tmp_buffer)[i];
 			v /= 127.0f;
 		}
-		v = MAX(v, -1.0f);
-		v = MIN(v, 1.0f);
+		if (v < -1.0f)
+			v = -1.0f;
+		if (v > 1.0f)
+			v = 1.0f;
 		ar->inputBuffer[i] = v;
 	}
 
-	pitch = (int)(ar->pitch * 180 / GF_PI);
-	yaw = (int)(ar->yaw * 180 / GF_PI);
-	roll = (int)(ar->roll * 180 / GF_PI);
-	
+	pitch = (int) (ar->pitch * 180 / GF_PI);
+	yaw = (int) (ar->yaw * 180 / GF_PI);
+	roll = (int) (ar->roll * 180 / GF_PI);
+
 	ArkamysAudio360RenderingSetRotation(ar->audioFx, pitch, yaw, roll);
 	ArkamysAudio360RenderingProcess(ar->audioFx, ar->inputBuffer, ar->outputBuffer, samples);
 	
