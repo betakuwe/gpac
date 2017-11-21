@@ -273,8 +273,6 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 
 	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
 
-	gf_ar_Arkamys_init(ar, nb_chan);
-
 	/*user disabled multichannel audio*/
 	if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
 
