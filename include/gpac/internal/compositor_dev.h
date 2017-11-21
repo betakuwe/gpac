@@ -29,10 +29,6 @@
 extern "C" {
 #endif
 
-/*Arkamys API*/
-#include "../../../extra_lib/include/Arkamys_VRPLAY-v109/Arkamys.h"
-#include "../../../extra_lib/include/Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h"
-
 #include <gpac/compositor.h>
 /*include scene graph API*/
 #include <gpac/thread.h>
@@ -1141,7 +1137,7 @@ typedef struct _audio_render
 
 	Fixed yaw, pitch, roll;
 
-	ARKAMYS_HANDLE audioFx;
+	void * audioFx;
 	char * tmp_buffer;
 	Float * inputBuffer;
 	Float * outputBuffer;

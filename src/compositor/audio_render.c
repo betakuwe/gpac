@@ -24,8 +24,8 @@
  */
 
 #include <gpac/internal/compositor_dev.h>
-#include <Arkamys_VRPLAY-v109/ArkamysAudio360Rendering.h>
-#include <Arkamys_VRPLAY-v109/Arkamys.h>
+#include <Arkamys/ArkamysAudio360Rendering.h>
+#include <Arkamys/Arkamys.h>
 
 #pragma comment(lib, "ArkamysVRPlay.lib")
 
