@@ -268,13 +268,39 @@ static GF_Err gf_ar_Arkamys_init(GF_AudioRenderer *ar, u32 nb_chan){
 static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 {
 	GF_Err e;
-	u32 freq, nb_bits, nb_chan, ch_cfg, orig_nb_chan, orig_ch_cfg;
+	const char *opt;
+	Bool skip_hw_config = GF_FALSE;
+	u32 freq, nb_bits, nb_chan, ch_cfg;
 	u32 in_ch, in_cfg, in_bps, in_freq;
+	u32 orig_nb_chan, orig_ch_cfg;
 
-	gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
+	freq = nb_bits = nb_chan = ch_cfg = 0;
+	opt = gf_cfg_get_key(ar->user->config, "Audio", "ForceFrequency");
+	if (!opt) gf_cfg_set_key(ar->user->config, "Audio", "ForceFrequency", "0");
+	else freq = atoi(opt);
+	opt = gf_cfg_get_key(ar->user->config, "Audio", "ForceChannels");
+	if (!opt) gf_cfg_set_key(ar->user->config, "Audio", "ForceChannels", "0");
+	else nb_chan = atoi(opt);
+	opt = gf_cfg_get_key(ar->user->config, "Audio", "ForceLayout");
+	if (!opt) gf_cfg_set_key(ar->user->config, "Audio", "ForceLayout", "0");
+	else {
+		if (!strnicmp(opt, "0x", 2)) sscanf(opt+2, "%x", &ch_cfg);
+		else sscanf(opt, "%x", &ch_cfg);
+    }
+	opt = gf_cfg_get_key(ar->user->config, "Audio", "ForceBPS");
+	if (!opt) gf_cfg_set_key(ar->user->config, "Audio", "ForceBPS", "0");
+	else nb_bits = atoi(opt);
 
-	/*user disabled multichannel audio*/
-	if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
+	if (!freq || !nb_bits || !nb_chan || !ch_cfg) {
+		gf_mixer_get_config(ar->mixer, &freq, &nb_chan, &nb_bits, &ch_cfg);
+
+		/*user disabled multichannel audio*/
+		if (ar->disable_multichannel && (nb_chan>2) ) nb_chan = 2;
+	} else {
+		if (ar->config_forced) skip_hw_config = GF_TRUE;
+		else ar->config_forced++;
+	}
+
 
 	gf_ar_Arkamys_init(ar, nb_chan);
 	ar->tmp_buffer = (char *)gf_malloc(23040 * nb_chan*(nb_bits / 2) * sizeof(char));
@@ -311,8 +337,10 @@ static GF_Err gf_ar_setup_output_format(GF_AudioRenderer *ar)
 			ar->filter_chain.enable_filters = GF_FALSE;
 			e = ar->audio_out->ConfigureOutput(ar->audio_out, &freq, &nb_chan, &nb_bits, ch_cfg);
 		}
-	} else {
+	} else if (!skip_hw_config) {
 		e = ar->audio_out->ConfigureOutput(ar->audio_out, &freq, &nb_chan, &nb_bits, ch_cfg);
+	} else {
+		e = GF_OK;
 	}
 
 	if (e) {
@@ -436,6 +464,8 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 		}
 		//always return buffer size (eg requested input size to be filled), since the clock is always increased by buffer_size (cf above line)
 		return buffer_size;
+	} else {
+		memset(buffer, 0, buffer_size);
 	}
 	return 0;
 }
