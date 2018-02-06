@@ -171,6 +171,7 @@ avcap_cflags=""
 avcap_ldflags="-lavcap"
 has_opensvc="no"
 has_openhevc="no"
+has_arkamys="no"
 
 win32="no"
 mingw32="no"
@@ -1857,6 +1858,20 @@ if docc -lhidapi-hidraw $LDFLAGS ; then
     has_hid="yes"
 fi
 
+
+#look for Arkamys support
+cat > $TMPC << EOF
+#include <Arkamys.h>
+#include <ArkamysAudio360Rendering.h>
+int main( void ) { int res = ArkamysAudio360RenderingGetMemSize(ARKAMYS_STEREO_INPUT); return 0; }
+EOF
+
+if docc -L$local_lib -lVRPlay $LDFLAGS -I$local_inc/Arkamys ; then
+    has_arkamys="yes"
+fi
+
+
+
 #overwrite detection with manual settings
 for opt do
     case "$opt" in
@@ -3125,6 +3140,12 @@ if test "$has_freenect" != "no"
 then
     echo "FREENECT_CFLAGS=$freenect_flags" >> config.mak
     echo "FREENECT_LDLAGS=$freenect_ld" >> config.mak
+fi
+
+echo "CONFIG_ARKAMYS=$has_arkamys" >> config.mak
+if test "$has_arkamys" != "no"
+then
+    echo "ARKAMYS_LDFLAGS=-L$local_lib -lVRPlay" >> config.mak
 fi
 
 echo "DISABLE_PLAYER=$disable_player" >> config.mak

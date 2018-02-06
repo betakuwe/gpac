@@ -213,6 +213,11 @@ MEDIATOOLS_CFLAGS=$(JS_FLAGS)
 include ../static.mak
 
 
+ifeq ($(CONFIG_ARKAMYS), yes)
+OPTFLAGS += -I$(LOCAL_INC_PATH)/Arkamys
+EXTRALIBS += $(ARKAMYS_LDFLAGS)
+endif
+
 
 ##libgpac library output
 LIB=libgpac$(DYN_LIB_SUFFIX)
@@ -264,6 +269,7 @@ compositor: $(LIBGPAC_COMPOSITOR)
 ../bin/gcc/$(LIB): $(LIBGPAC_UTILS) $(LIBGPAC_IETF) $(LIBGPAC_BIFS) $(LIBGPAC_ODF) $(LIBGPAC_LASER) $(LIBGPAC_ISOM) $(LIBGPAC_SCENEMANAGER) $(LIBGPAC_TERMINAL) compositor scenegraph media_tools mcrypt $(OBJS)
 	@echo "OBJS $(OBJS)"
 	@echo "LIBS $(EXTRALIBS)"
+	@echo "comp clags $(COMPOSITOR_CFLAGS)"
 
 ifeq ($(CONFIG_DARWIN),yes)
 
