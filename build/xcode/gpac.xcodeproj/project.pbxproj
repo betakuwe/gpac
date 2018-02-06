@@ -4269,7 +4269,7 @@
 					"-lplds4",
 					"-lplc4",
 					"-lnspr4",
-					"-lVRPlay",
+					"-lVRPlay_osx",
 				);
 				PRODUCT_NAME = gpac;
 				SDKROOT = macosx;
@@ -4325,7 +4325,7 @@
 					"-lplds4",
 					"-lplc4",
 					"-lnspr4",
-					"-lVRPlay",
+					"-lVRPlay_osx",
 				);
 				PRODUCT_NAME = gpac;
 				SDKROOT = macosx;

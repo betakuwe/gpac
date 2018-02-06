@@ -27,7 +27,10 @@
 #include <ArkamysAudio360Rendering.h>
 #include <Arkamys.h>
 
+#if (defined(WIN32) || defined(_WIN32_WCE)) && !defined(__GNUC__)
 #pragma comment(lib, "ArkamysVRPlay.lib")
+#endif
+
 
 GF_Err gf_afc_load(GF_AudioFilterChain *afc, GF_User *user, char *filterstring)
 {
