@@ -24,8 +24,8 @@
  */
 
 #include <gpac/internal/compositor_dev.h>
-#include <Arkamys/ArkamysAudio360Rendering.h>
-#include <Arkamys/Arkamys.h>
+#include <ArkamysAudio360Rendering.h>
+#include <Arkamys.h>
 
 #pragma comment(lib, "ArkamysVRPlay.lib")
 
@@ -473,6 +473,7 @@ static u32 gf_ar_fill_output(void *ptr, char *buffer, u32 buffer_size)
 static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 {
 	u32 i, samples_per_chan, samples, s_size, freq, nb_bits, nb_chan, ch_cfg, bytes_written, tmp_buffer_size;
+	ARKAMYS_RETURN aerr;
 	int pitch, yaw, roll;
 
 	GF_AudioRenderer *ar = (GF_AudioRenderer *)ptr;
@@ -510,7 +511,8 @@ static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 	roll = (int) (ar->roll * 180 / GF_PI);
 
 	ArkamysAudio360RenderingSetRotation(ar->audioFx, pitch, yaw, roll);
-	ArkamysAudio360RenderingProcess(ar->audioFx, ar->inputBuffer, ar->outputBuffer, samples);
+	aerr = ArkamysAudio360RenderingProcess(ar->audioFx, ar->inputBuffer, ar->outputBuffer, samples);
+	if (aerr != ARKAMYS_NO_ERROR) return 0;
 	
 	for (i = 0; i<samples * 2; i++) {
 		Float v = ar->outputBuffer[i];

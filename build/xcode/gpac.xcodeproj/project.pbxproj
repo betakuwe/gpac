@@ -4249,10 +4249,12 @@
 					/opt/local/include/mozjs185,
 					/opt/local/include/nspr,
 					../../include,
+					../../extra_lib/include/Arkamys,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/opt/local/lib,
 					/opt/local/lib/nspr,
+					../../extra_lib/lib/gcc,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OBJROOT = build;
@@ -4267,6 +4269,7 @@
 					"-lplds4",
 					"-lplc4",
 					"-lnspr4",
+					"-lVRPlay",
 				);
 				PRODUCT_NAME = gpac;
 				SDKROOT = macosx;
@@ -4303,10 +4306,12 @@
 					/opt/local/include/mozjs185,
 					/opt/local/include/nspr,
 					../../include,
+					../../extra_lib/include/Arkamys,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/opt/local/lib,
 					/opt/local/lib/nspr,
+					../../extra_lib/lib/gcc,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OBJROOT = build;
@@ -4320,6 +4325,7 @@
 					"-lplds4",
 					"-lplc4",
 					"-lnspr4",
+					"-lVRPlay",
 				);
 				PRODUCT_NAME = gpac;
 				SDKROOT = macosx;
