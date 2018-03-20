@@ -385,7 +385,6 @@
 		925FF2A51ABC53F30085B04C /* odf_parse_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 925FF2A31ABC53F30085B04C /* odf_parse_common.h */; };
 		925FF2A61ABC53F30085B04C /* smjs_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 925FF2A41ABC53F30085B04C /* smjs_api.h */; };
 		925FF2A71ABC55030085B04C /* os_file.c in Sources */ = {isa = PBXBuildFile; fileRef = 71CCF2361277045100339E12 /* os_file.c */; };
-		92697FDE2029EFA1001904FF /* libVRPlay.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 925413D12029EC91003D66B7 /* libVRPlay.a */; };
 		9280E7251DD23FFE001E6441 /* iTunesArtwork in Resources */ = {isa = PBXBuildFile; fileRef = 9236FDEF1DD23F1400B3E86F /* iTunesArtwork */; };
 		928B2D131BE11BC100CAC65D /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 928B2D111BE11BC100CAC65D /* libcrypto.a */; };
 		928B2D141BE11BC100CAC65D /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 928B2D121BE11BC100CAC65D /* libssl.a */; };
@@ -456,6 +455,7 @@
 		92BC213B16EF8E7A000E0620 /* widgetman.c in Sources */ = {isa = PBXBuildFile; fileRef = 71A1998E1278777A00ACFF58 /* widgetman.c */; };
 		92BC213C16EF8E7A000E0620 /* widgetman.h in Headers */ = {isa = PBXBuildFile; fileRef = 71A1998F1278777A00ACFF58 /* widgetman.h */; };
 		92C7F19A1AA8B48E00BA5B4C /* gui in Resources */ = {isa = PBXBuildFile; fileRef = 92C7F1991AA8B48E00BA5B4C /* gui */; };
+		92CF72A7205FD9F00037974C /* libVRPlay.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 925413D12029EC91003D66B7 /* libVRPlay.a */; };
 		92D127FE1BBADC7F00DA003B /* shaders in Resources */ = {isa = PBXBuildFile; fileRef = 92D127FD1BBADC7F00DA003B /* shaders */; };
 		92D3C62C2031ECE600BA1735 /* atsc_dmx.c in Sources */ = {isa = PBXBuildFile; fileRef = 92D3C62B2031ECE600BA1735 /* atsc_dmx.c */; };
 		92DF5CA61BA6C6F80058A7BA /* iff.c in Sources */ = {isa = PBXBuildFile; fileRef = 92DF5CA51BA6C6F80058A7BA /* iff.c */; };
@@ -1094,6 +1094,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				92CF72A7205FD9F00037974C /* libVRPlay.a in Frameworks */,
 				9292BF031CFC94060070EB05 /* CoreMedia.framework in Frameworks */,
 				9292BF011CFC93D50070EB05 /* CoreVideo.framework in Frameworks */,
 				9292BEFF1CFC93C10070EB05 /* VideoToolbox.framework in Frameworks */,
@@ -1126,7 +1127,6 @@
 				71A19BC412797D9200ACFF58 /* libobjc.dylib in Frameworks */,
 				71A19C4112797E4000ACFF58 /* libdl.dylib in Frameworks */,
 				92B039F716F2050100B2568F /* libSDL2.a in Frameworks */,
-				92697FDE2029EFA1001904FF /* libVRPlay.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
