@@ -1866,10 +1866,15 @@ cat > $TMPC << EOF
 int main( void ) { int res = ArkamysAudio360RenderingGetMemSize(ARKAMYS_STEREO_INPUT); return 0; }
 EOF
 
-if docc -L$local_lib -lVRPlay $LDFLAGS -I$local_inc/Arkamys ; then
-    has_arkamys="yes"
+if test "$darwin" = "yes" ; then
+    if docc -L$local_lib -lVRPlay_osx $LDFLAGS -I$local_inc/Arkamys ; then
+        has_arkamys="yes"
+    fi
+else
+    if docc -L$local_lib -lVRPlay $LDFLAGS -I$local_inc/Arkamys ; then
+        has_arkamys="yes"
+    fi
 fi
-
 
 
 #overwrite detection with manual settings
@@ -3145,7 +3150,11 @@ fi
 echo "CONFIG_ARKAMYS=$has_arkamys" >> config.mak
 if test "$has_arkamys" != "no"
 then
-    echo "ARKAMYS_LDFLAGS=-L$local_lib -lVRPlay" >> config.mak
+    if test "$darwin" = "yes" ; then
+        echo "ARKAMYS_LDFLAGS=-L$local_lib -lVRPlay_osx" >> config.mak
+    else
+	echo "ARKAMYS_LDFLAGS=-L$local_lib -lVRPlay" >> config.mak
+    fi
 fi
 
 echo "DISABLE_PLAYER=$disable_player" >> config.mak
