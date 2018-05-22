@@ -1484,6 +1484,8 @@ try_next_segment:
 				for (k=0; k<import.nb_tracks; k++) {
 					switch (import.tk_info[k].type) {
 					case GF_ISOM_MEDIA_VISUAL:
+                    case GF_ISOM_MEDIA_AUXV:
+                    case GF_ISOM_MEDIA_PICT:
 						width = import.tk_info[k].video_info.width;
 						height = import.tk_info[k].video_info.height;
 						break;
