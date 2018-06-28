@@ -149,7 +149,9 @@ void PrintLiveUsage();
 u32 grab_live_m2ts(const char *grab_m2ts, const char *ifce_name, const char *outName);
 #endif
 
+#ifndef GPAC_DISABLE_ATSC
 u32 grab_atsc3_session(const char *dir, const char *ifce, s32 serviceID, s32 max_segs, u32 stats_rate, u32 debug_tsi);
+#endif
 
 int mp4boxTerminal(int argc, char **argv);
 
@@ -231,6 +233,7 @@ void PrintGeneralUsage()
 	        " -no-sys              removes all MPEG-4 Systems info except IOD (profiles)\n"
 	        "                       * Note: Set by default whith '-add' and '-cat'\n"
 	        " -no-iod              removes InitialObjectDescriptor from file\n"
+	        " -mfra                inserts movie fragment random offset when fragmenting file (ignored in dash mode).\n"
 	        " -isma                rewrites the file as an ISMA 1.0 AV file\n"
 	        " -ismax               same as \'-isma\' and removes all clock references\n"
 	        " -3gp                 rewrites as 3GPP(2) file (no more MPEG-4 Systems Info)\n"
@@ -399,7 +402,8 @@ void PrintDASHUsage()
 	        " -ast-offset TIME     specifies MPD AvailabilityStartTime offset in ms if positive, or availabilityTimeOffset of each representation if negative. Default is 0 sec delay\n"
 	        " -dash-scale SCALE    specifies that timing for -dash and -frag are expressed in SCALE units per seconds\n"
 	        " -mem-frags           fragments will be produced in memory rather than on disk before flushing to disk\n"
-	        " -pssh-moof           stores PSSH boxes in first moof of each segments. By default PSSH are stored in movie box.\n"
+	        " -pssh-moof           [deprecated] use -pssh=f\n"
+	        " -pssh=MODE           sets pssh store mode. Mode can be v (moov), f (frag), m (mpd) mv/vm (moov+mpd) mf/fm (moof+mpd).\n"
 	        " -sample-groups-traf  stores sample group descriptions in traf (duplicated for each traf). If not used, sample group descriptions are stored in the movie box.\n"
 	        " -no-cache            disable file cache for dash inputs .\n"
 	        " -no-loop             disables looping content in live mode and uses period switch instead.\n"
@@ -430,6 +434,8 @@ void PrintDASHUsage()
 	        "                        both: sets ContentProtection in both elements\n"
 	        " -start-date          for live mode, sets start date (as xs:date, eg YYYY-MM-DDTHH:MM:SSZ. Default is now.\n"
 	        "                        !! Do not use with multiple periods, nor when DASH duration is not a multiple of GOP size !!\n"
+	        " -cues                ignores dash duration and segment according to cue times in given XML file. See tests/media/dash_cues for examples.\n"
+	        " -strict-cues         throw error if something is wrong while parsing cues or applying cue-based segmentation.\n"
 	        "\n");
 }
 
@@ -1947,10 +1953,11 @@ Bool stream_rtp = GF_FALSE;
 Bool force_test_mode = GF_FALSE;
 Bool force_co64 = GF_FALSE;
 Bool live_scene = GF_FALSE;
+Bool use_mfra = GF_FALSE;
 GF_MemTrackerType mem_track = GF_MemTrackerNone;
 
 Bool dump_iod = GF_FALSE;
-Bool pssh_in_moof = GF_FALSE;
+GF_DASHPSSHMode pssh_mode = 0;
 Bool samplegroups_in_traf = GF_FALSE;
 Bool daisy_chain_sidx = GF_FALSE;
 Bool single_segment = GF_FALSE;
@@ -1959,18 +1966,22 @@ Bool segment_timeline = GF_FALSE;
 u32 segment_marker = GF_FALSE;
 GF_DashProfile dash_profile = GF_DASH_PROFILE_UNKNOWN;
 const char *dash_profile_extension = NULL;
+const char *dash_cues = NULL;
+Bool strict_cues = GF_FALSE;
 Bool use_url_template = GF_FALSE;
 Bool seg_at_rap = GF_FALSE;
 Bool frag_at_rap = GF_FALSE;
 Bool adjust_split_end = GF_FALSE;
 Bool memory_frags = GF_TRUE;
 Bool keep_utc = GF_FALSE;
+#ifndef GPAC_DISABLE_ATSC
 Bool grab_atsc = GF_FALSE;
 s32 atsc_max_segs = -1;
 u32 atsc_stats_rate = 0;
 u32 atsc_debug_tsi = 0;
 const char *atsc_output_dir = NULL;
 s32 atsc_service = -1;
+#endif
 u32 timescale = 0;
 const char *do_wget = NULL;
 GF_DashSegmenterInput *dash_inputs = NULL;
@@ -2131,6 +2142,9 @@ u32 mp4box_parse_args_continue(int argc, char **argv, u32 *current_index)
 		}
 		else if (!stricmp(arg, "-frag-rap")) {
 			frag_at_rap = 1;
+		}
+		else if (!stricmp(arg, "-mfra")) {
+			use_mfra = GF_TRUE;
 		}
 		else if (!stricmp(arg, "-ts")) hint_flags |= GP_RTP_PCK_SIGNAL_TS;
 		else if (!stricmp(arg, "-size")) hint_flags |= GP_RTP_PCK_SIGNAL_SIZE;
@@ -2642,7 +2656,7 @@ u32 mp4box_parse_args_continue(int argc, char **argv, u32 *current_index)
 		else if (!stricmp(arg, "-split")) {
 			CHECK_NEXT_ARG
 			split_duration = atof(argv[i + 1]);
-			if (split_duration < 0) split_duration = 0;;
+			if (split_duration < 0) split_duration = 0;
 			i++;
 			split_size = 0;
 		}
@@ -2822,7 +2836,9 @@ else if (!stricmp(arg, "-h")) {
 	else if (!strcmp(argv[i + 1], "crypt")) PrintEncryptUsage();
 	else if (!strcmp(argv[i + 1], "meta")) PrintMetaUsage();
 	else if (!strcmp(argv[i + 1], "swf")) PrintSWFUsage();
+#ifndef GPAC_DISABLE_ATSC
 	else if (!strcmp(argv[i + 1], "atsc")) PrintATSCUsage();
+#endif
 #if !defined(GPAC_DISABLE_STREAMING) && !defined(GPAC_DISABLE_SENG)
 	else if (!strcmp(argv[i + 1], "rtp")) PrintStreamerUsage();
 	else if (!strcmp(argv[i + 1], "live")) PrintLiveUsage();
@@ -2839,7 +2855,9 @@ else if (!stricmp(arg, "-h")) {
 		PrintEncryptUsage();
 		PrintMetaUsage();
 		PrintSWFUsage();
+#ifndef GPAC_DISABLE_ATSC
 		PrintATSCUsage();
+#endif
 #if !defined(GPAC_DISABLE_STREAMING) && !defined(GPAC_DISABLE_SENG)
 		PrintStreamerUsage();
 		PrintLiveUsage();
@@ -2955,6 +2973,7 @@ Bool mp4box_parse_args(int argc, char **argv)
 			grab_ifce = argv[i + 1];
 			i++;
 		}
+#ifndef GPAC_DISABLE_ATSC
 		else if (!stricmp(arg, "-atsc")) {
 			grab_atsc = GF_TRUE;
 		}
@@ -2983,6 +3002,7 @@ Bool mp4box_parse_args(int argc, char **argv)
 			atsc_debug_tsi = atoi(argv[i + 1]);
 			i++;
 		}
+#endif
 #if !defined(GPAC_DISABLE_CORE_TOOLS)
 		else if (!stricmp(arg, "-wget")) {
 			CHECK_NEXT_ARG
@@ -3488,7 +3508,15 @@ Bool mp4box_parse_args(int argc, char **argv)
 			single_file = 1;
 		}
 		else if (!stricmp(arg, "-pssh-moof")) {
-			pssh_in_moof = 1;
+			pssh_mode = GF_DASH_PSSH_MOOF;
+		}
+		else if (!strnicmp(arg, "-pssh=", 6)) {
+			if (!strcmp(arg+6, "f")) pssh_mode = GF_DASH_PSSH_MOOF;
+			else if (!strcmp(arg+6, "v")) pssh_mode = GF_DASH_PSSH_MOOV;
+			else if (!strcmp(arg+6, "m")) pssh_mode = GF_DASH_PSSH_MPD;
+			else if (!strcmp(arg+6, "mf") || !strcmp(arg+6, "fm")) pssh_mode = GF_DASH_PSSH_MOOF_MPD;
+			else if (!strcmp(arg+6, "mv") || !strcmp(arg+6, "vm")) pssh_mode = GF_DASH_PSSH_MOOV_MPD;
+			else pssh_mode = GF_DASH_PSSH_MOOV;
 		}
 		else if (!stricmp(arg, "-sample-groups-traf")) {
 			samplegroups_in_traf = 1;
@@ -3533,6 +3561,14 @@ Bool mp4box_parse_args(int argc, char **argv)
 			m = argv[i + 1];
 			segment_marker = GF_4CC(m[0], m[1], m[2], m[3]);
 			i++;
+		}
+		else if (!stricmp(arg, "-cues")) {
+			CHECK_NEXT_ARG
+			dash_cues = argv[i + 1];
+			i++;
+		}
+		else if (!stricmp(arg, "-strict-cues")) {
+			strict_cues = GF_TRUE;
 		}
 		else if (!stricmp(arg, "-insert-utc")) {
 			insert_utc = GF_TRUE;
@@ -3635,6 +3671,7 @@ int mp4boxMain(int argc, char **argv)
 	if (!inName && dump_std)
 		inName = "std";
 
+#ifndef GPAC_DISABLE_ATSC
 	if (grab_atsc) {
 		if (!gf_logs) {
 			gf_log_set_tool_level(GF_LOG_ALL, GF_LOG_WARNING);
@@ -3642,6 +3679,7 @@ int mp4boxMain(int argc, char **argv)
 		}
 		return grab_atsc3_session(atsc_output_dir, grab_ifce, atsc_service, atsc_max_segs, atsc_stats_rate, atsc_debug_tsi);
 	}
+#endif
 
 	if (!inName) {
 		PrintUsage();
@@ -4176,7 +4214,7 @@ int mp4boxMain(int argc, char **argv)
 		if (!e) e = gf_dasher_set_ast_offset(dasher, ast_offset_ms);
 		if (!e) e = gf_dasher_enable_memory_fragmenting(dasher, memory_frags);
 		if (!e) e = gf_dasher_set_initial_isobmf(dasher, initial_moof_sn, initial_tfdt);
-		if (!e) e = gf_dasher_configure_isobmf_default(dasher, no_fragments_defaults, pssh_in_moof, samplegroups_in_traf, single_traf_per_moof, tfdt_per_traf);
+		if (!e) e = gf_dasher_configure_isobmf_default(dasher, no_fragments_defaults, pssh_mode, samplegroups_in_traf, single_traf_per_moof, tfdt_per_traf);
 		if (!e) e = gf_dasher_enable_utc_ref(dasher, insert_utc);
 		if (!e) e = gf_dasher_enable_real_time(dasher, frag_real_time);
 		if (!e) e = gf_dasher_set_content_protection_location_mode(dasher, cp_location_mode);
@@ -4186,6 +4224,7 @@ int mp4boxMain(int argc, char **argv)
 		if (!e) e = gf_dasher_enable_loop_inputs(dasher, ! no_loop);
 		if (!e) e = gf_dasher_set_split_on_bound(dasher, split_on_bound);
 		if (!e) e = gf_dasher_set_split_on_closest(dasher, split_on_closest);
+		if (!e && dash_cues) e = gf_dasher_set_cues(dasher, dash_cues, strict_cues);
 
 		for (i=0; i < nb_dash_inputs; i++) {
 			if (!e) e = gf_dasher_add_input(dasher, &dash_inputs[i]);
@@ -5246,7 +5285,7 @@ int mp4boxMain(int argc, char **argv)
 		if (!interleaving_time) interleaving_time = DEFAULT_INTERLEAVING_IN_SEC;
 		if (HintIt) fprintf(stderr, "Warning: cannot hint and fragment - ignoring hint\n");
 		fprintf(stderr, "Fragmenting file (%.3f seconds fragments)\n", interleaving_time);
-		e = gf_media_fragment_file(file, outfile, interleaving_time);
+		e = gf_media_fragment_file(file, outfile, interleaving_time, use_mfra);
 		if (e) fprintf(stderr, "Error while fragmenting file: %s\n", gf_error_to_string(e));
 		if (!e && !outName && !force_new) {
 			if (gf_delete_file(inName)) fprintf(stderr, "Error removing file %s\n", inName);

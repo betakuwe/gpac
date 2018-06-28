@@ -2477,7 +2477,7 @@ u32 gf_mpd_get_base_url_count(GF_MPD *mpd, GF_MPD_Period *period, GF_MPD_Adaptat
 	return base_url_count;
 }
 
-static char *gf_mpd_get_base_url(GF_List *baseURLs, char *url, u32 *base_url_index)
+static char *gf_mpd_get_base_url(GF_List *baseURLs, char *parent_url, u32 *base_url_index)
 {
 	GF_MPD_BaseURL *url_child;
 	u32 idx = 0;
@@ -2500,11 +2500,11 @@ static char *gf_mpd_get_base_url(GF_List *baseURLs, char *url, u32 *base_url_ind
 
 	url_child = gf_list_get(baseURLs, idx);
 	if (url_child) {
-		char *t_url = gf_url_get_absolute_path(url_child->redirection ? url_child->redirection : url_child->URL, url);
-		gf_free(url);
-		url = t_url;
+		char *t_url = gf_url_concatenate(parent_url, url_child->redirection ? url_child->redirection : url_child->URL);
+		gf_free(parent_url);
+		parent_url = t_url;
 	}
-	return url;
+	return parent_url;
 }
 
 GF_EXPORT
@@ -3472,6 +3472,101 @@ GF_Err gf_mpd_init_smooth_from_dom(GF_XMLNode *root, GF_MPD *mpd, const char *de
 
     return GF_OK;
 }
+
+
+GF_Err gf_mpd_load_cues(const char *cues_file, u32 stream_id, u32 *cues_timescale, Bool *use_edit_list, GF_DASHCueInfo **out_cues, u32 *nb_cues)
+{
+	GF_XMLNode *root, *stream, *cue;
+	GF_XMLAttribute *att;
+	u32 i, j, k;
+	GF_DOMParser *parser = gf_xml_dom_new();
+	GF_Err e = gf_xml_dom_parse(parser, cues_file, NULL, NULL);
+	if (e != GF_OK) {
+		gf_xml_dom_del(parser);
+		GF_LOG(GF_LOG_ERROR, GF_LOG_DASH, ("[DASH] Error loading cue file %s\n", gf_error_to_string(e)));
+		return GF_NON_COMPLIANT_BITSTREAM;
+	}
+	root = gf_xml_dom_get_root(parser);
+	if (e != GF_OK) {
+		gf_xml_dom_del(parser);
+		GF_LOG(GF_LOG_ERROR, GF_LOG_DASH, ("[DASH] Error loading cue file, no root element found\n"));
+		return GF_NON_COMPLIANT_BITSTREAM;
+	}
+	if (strcmp(root->name, "DASHCues")) {
+		GF_LOG(GF_LOG_ERROR, GF_LOG_DASH, ("[DASH] Wrong cue file, expecting DASHCues got %s\n", root->name));
+		gf_xml_dom_del(parser);
+		return GF_NON_COMPLIANT_BITSTREAM;
+	}
+
+	i=0;
+	while ((stream = gf_list_enum(root->content, &i))) {
+		u32 id=0;
+		u32 cur_cue;
+		GF_DASHCueInfo *cues;
+		u32 timescale=1000;
+		if (stream->type != GF_XML_NODE_TYPE) continue;
+		if (strcmp(stream->name, "Stream")) continue;
+
+		*use_edit_list = GF_FALSE;
+		j=0;
+		while ((att = gf_list_enum(stream->attributes, &j))) {
+			if (!strcmp(att->name, "id")) id = atoi(att->value);
+			else if (!strcmp(att->name, "timescale")) timescale = atoi(att->value);
+			else if (!strcmp(att->name, "mode") && !strcmp(att->value, "edit") ) *use_edit_list = GF_TRUE;
+		}
+		if (id != stream_id) continue;
+
+		*cues_timescale = timescale;
+		*nb_cues = 0;
+
+		j=0;
+		while ((cue = gf_list_enum(stream->content, &j))) {
+			if (cue->type != GF_XML_NODE_TYPE) continue;
+			if (strcmp(cue->name, "Cue")) continue;
+			(*nb_cues)++;
+		}
+		cues = gf_malloc(sizeof(GF_DASHCueInfo)* (*nb_cues) );
+		if (!cues) {
+			gf_xml_dom_del(parser);
+			GF_LOG(GF_LOG_ERROR, GF_LOG_DASH, ("[DASH] Failed to allocate %d cues\n", (*nb_cues) ));
+			return GF_OUT_OF_MEM;
+		}
+		memset(cues, 0, sizeof(GF_DASHCueInfo)* (*nb_cues) );
+		*out_cues = cues;
+
+		j=0;
+		cur_cue = 0;
+		while ((cue = gf_list_enum(stream->content, &j))) {
+			if (cue->type != GF_XML_NODE_TYPE) continue;
+			if (strcmp(cue->name, "Cue")) continue;
+
+			k=0;
+			while ((att = gf_list_enum(cue->attributes, &k))) {
+				if (!strcmp(att->name, "sample")) cues[cur_cue].sample_num = atoi(att->value);
+				else if (!strcmp(att->name, "dts")) sscanf(att->value, LLD, &cues[cur_cue].dts);
+				else if (!strcmp(att->name, "cts")) sscanf(att->value, LLD, &cues[cur_cue].cts);
+			}
+			//first cue
+			if (!cues[cur_cue].cts && !cues[cur_cue].dts && (cues[cur_cue].sample_num<=1) ) {
+				(*nb_cues)--;
+				GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH] cue for first sample found in stream %d, ignoring\n", stream_id));
+			} else {
+				cur_cue++;
+			}
+		}
+
+
+		break;
+	}
+	gf_xml_dom_del(parser);
+
+	if (!stream) {
+		GF_LOG(GF_LOG_ERROR, GF_LOG_DASH, ("[DASH] No cues found for requested stream %d\n", stream_id));
+		return GF_BAD_PARAM;
+	}
+	return GF_OK;
+}
+
 
 
 #endif /*GPAC_DISABLE_CORE_TOOLS*/

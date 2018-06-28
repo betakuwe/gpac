@@ -1375,16 +1375,17 @@
 #pragma comment (linker, EXPORT_SYMBOL(gf_media_export_nhml) )
 #endif /*GPAC_DISABLE_MEDIA_EXPORT*/
 
-/*mcrypt exports*/
-#ifndef GPAC_DISABLE_MCRYPT
+/*crypto exports*/
+#ifndef GPAC_DISABLE_CRYPTO
 #pragma comment (linker, EXPORT_SYMBOL(gf_crypt_open) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_crypt_close) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_crypt_init) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_crypt_decrypt) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_crypt_encrypt) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_crypt_set_key) )
-#pragma comment (linker, EXPORT_SYMBOL(gf_crypt_set_state) )
-#endif GPAC_DISABLE_MCRYPT
+#pragma comment (linker, EXPORT_SYMBOL(gf_crypt_set_IV) )
+#endif GPAC_DISABLE_CRYPTO
+
 #pragma comment (linker, EXPORT_SYMBOL(gf_sha1_csum) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_sha1_csum_hexa) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_sha1_file) )
@@ -2075,6 +2076,7 @@
 #pragma comment (linker, EXPORT_SYMBOL(gf_dasher_enable_loop_inputs) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dasher_set_split_on_bound) )
 #pragma comment (linker, EXPORT_SYMBOL(gf_dasher_set_split_on_closest) )
+#pragma comment (linker, EXPORT_SYMBOL(gf_dasher_set_cues) )
 
 
 #pragma comment (linker, EXPORT_SYMBOL(gf_dasher_next_update_time) )

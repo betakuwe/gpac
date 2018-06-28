@@ -2970,7 +2970,7 @@ static s32 dash_do_rate_adaptation_bba0(GF_DashClient *dash, GF_DASH_Group *grou
 	}
 	else if (f_buf_now <= rate_minus) {
 		// rate_next = min of Ri st. Ri > f_buf_now
-		new_index = gf_list_count(group->adaptation_set->representations) - 1;;
+		new_index = gf_list_count(group->adaptation_set->representations) - 1;
 		get_min_rate_above(group->adaptation_set->representations, f_buf_now, &new_index);
 	}
 	else {
@@ -3631,7 +3631,7 @@ static GF_Err gf_dash_download_init_segment(GF_DashClient *dash, GF_DASH_Group *
 				GF_MPD_BaseURL *b_url = gf_list_get(a_rep->base_URLs, j);
 				char *nURL = gf_url_concatenate(dash->base_url, b_url->URL);
 				if (nURL) {
-					u32 len = strlen(nURL);
+					u32 len = (u32) strlen(nURL);
 					if (nURL[len] != '/') {
 						GF_Err e = gf_dash_download_resource(dash, &(group->segment_download), nURL, 0, 0, 1, group);
 						if (!e) {

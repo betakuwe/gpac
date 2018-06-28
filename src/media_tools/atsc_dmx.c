@@ -24,6 +24,9 @@
  */
 
 #include <gpac/atsc.h>
+
+#ifndef GPAC_DISABLE_ATSC
+
 #include <gpac/network.h>
 #include <gpac/bitstream.h>
 #include <gpac/xml.h>
@@ -467,7 +470,7 @@ static GF_Err gf_atsc3_dmx_process_slt(GF_ATSCDmx *atscd, GF_XMLNode *root)
 			else if (atscd->tune_all_sls) service->tune_mode = GF_ATSC_TUNE_SLS_ONLY;
 
 			//we are tuning, register socket
-			if (service->tune_mode != GF_ATSC_TUNE_OFF) 
+			if (service->tune_mode != GF_ATSC_TUNE_OFF)
 				gf_sk_group_register(atscd->active_sockets, service->sock);
 
 			gf_list_add(atscd->services, service);
@@ -971,7 +974,7 @@ static GF_Err gf_atsc3_service_parse_mbms_enveloppe(GF_ATSCDmx *atscd, GF_ATSCSe
 	i=0;
 	while ((it = gf_list_enum(root->content, &i))) {
 		const char *content_type = NULL;
-		const char *uri = NULL;
+		/*const char *uri = NULL;*/
 		u32 version = 0;
 
 		if (strcmp(it->name, "item")) continue;
@@ -979,7 +982,7 @@ static GF_Err gf_atsc3_service_parse_mbms_enveloppe(GF_ATSCDmx *atscd, GF_ATSCSe
 		j=0;
 		while ((att = gf_list_enum(it->attributes, &j))) {
 			if (!stricmp(att->name, "contentType")) content_type = att->value;
-			else if (!stricmp(att->name, "metadataURI")) uri = att->value;
+			/*else if (!stricmp(att->name, "metadataURI")) uri = att->value;*/
 			else if (!stricmp(att->name, "version")) version = atoi(att->value);
 		}
 		if (!content_type) continue;
@@ -1332,8 +1335,8 @@ enum
 static GF_Err gf_atsc3_dmx_process_service(GF_ATSCDmx *atscd, GF_ATSCService *s, GF_ATSCRouteSession *route_sess)
 {
 	GF_Err e;
-	u32 nb_read, v, C, psi, S, O, H, Res, A, B, hdr_len, cp, cc, tsi, toi, pos;
-	u32 a_G=0, a_U=0, a_S=0, a_M=0, a_A=0, a_H=0, a_D=0;
+	u32 nb_read, v, C, psi, S, O, H, /*Res, A,*/ B, hdr_len, cp, cc, tsi, toi, pos;
+	u32 /*a_G=0, a_U=0,*/ a_S=0, a_M=0/*, a_A=0, a_H=0, a_D=0*/;
 	u64 tol_size=0;
 	Bool in_order = GF_TRUE;
 	u32 start_offset;
@@ -1364,8 +1367,8 @@ static GF_Err gf_atsc3_dmx_process_service(GF_ATSCDmx *atscd, GF_ATSCService *s,
 	S = gf_bs_read_int(atscd->bs, 1);
 	O = gf_bs_read_int(atscd->bs, 2);
 	H = gf_bs_read_int(atscd->bs, 1);
-	Res = gf_bs_read_int(atscd->bs, 2);
-	A = gf_bs_read_int(atscd->bs, 1);
+	/*Res = */gf_bs_read_int(atscd->bs, 2);
+	/*A = */gf_bs_read_int(atscd->bs, 1);
 	B = gf_bs_read_int(atscd->bs, 1);
 	hdr_len = gf_bs_read_int(atscd->bs, 8);
 	cp = gf_bs_read_int(atscd->bs, 8);
@@ -1448,13 +1451,13 @@ static GF_Err gf_atsc3_dmx_process_service(GF_ATSCDmx *atscd, GF_ATSCService *s,
 		}
 	} else {
 		//check TOI for TSI 0
-		a_G = toi & (1<<31) ? 1 : 0;
-		a_U = toi & (1<<16) ? 1 : 0;
+		/*a_G = toi & (1<<31) ? 1 : 0;
+		a_U = toi & (1<<16) ? 1 : 0;*/
 		a_S = toi & (1<<17) ? 1 : 0;
 		a_M = toi & (1<<18) ? 1 : 0;
-		a_A = toi & (1<<19) ? 1 : 0;
+		/*a_A = toi & (1<<19) ? 1 : 0;
 		a_H = toi & (1<<22) ? 1 : 0;
-		a_D = toi & (1<<23) ? 1 : 0;
+		a_D = toi & (1<<23) ? 1 : 0;*/
 		v = toi & 0xFF;
 		//skip known version
 		if (a_M && (s->mpd_version == v+1)) a_M = 0;
@@ -1544,7 +1547,7 @@ static GF_Err gf_atsc3_dmx_process_lls(GF_ATSCDmx *atscd)
 	GF_XMLNode *root;
 
 	e = gf_sk_receive_no_select(atscd->sock, atscd->buffer, atscd->buffer_size, 0, &read);
-	if (e) 
+	if (e)
 		return e;
 
 	atscd->nb_packets++;
@@ -1623,7 +1626,7 @@ GF_Err gf_atsc3_dmx_process(GF_ATSCDmx *atscd)
 {
 	u32 i, count;
 	GF_Err e;
-	
+
 	//check all active sockets
 	e = gf_sk_group_select(atscd->active_sockets, 10);
 	if (e) return e;
@@ -1840,3 +1843,4 @@ void gf_atsc3_dmx_debug_tsi(GF_ATSCDmx *atscd, u32 tsi)
 	if (atscd) atscd->debug_tsi = tsi;
 }
 
+#endif /* GPAC_DISABLE_ATSC */
