@@ -7057,6 +7057,11 @@ GF_Err trak_Read(GF_Box *s, GF_BitStream *bs)
 		GF_LOG(GF_LOG_ERROR, GF_LOG_CONTAINER, ("[iso file] Missing MediaBox\n"));
 		return GF_ISOM_INVALID_FILE;
 	}
+	if (!ptr->Media->information || !ptr->Media->information->sampleTable) {
+		GF_LOG(GF_LOG_ERROR, GF_LOG_CONTAINER, ("[iso file] Invalid MediaBox\n"));
+		return GF_ISOM_INVALID_FILE;
+	}
+
 	for (i=0; i<gf_list_count(ptr->Media->information->sampleTable->other_boxes); i++) {
 		GF_Box *a = gf_list_get(ptr->Media->information->sampleTable->other_boxes, i);
 		if ((a->type ==GF_ISOM_BOX_TYPE_UUID) && (((GF_UUIDBox *)a)->internal_4cc == GF_ISOM_BOX_UUID_PSEC)) {
@@ -10702,6 +10707,7 @@ GF_Err segr_Read(GF_Box *s, GF_BitStream *bs)
 	ptr->num_session_groups = gf_bs_read_u16(bs);
 	if (ptr->num_session_groups*3>ptr->size) {
 		GF_LOG(GF_LOG_ERROR, GF_LOG_CONTAINER, ("[iso file] Invalid number of entries %d in segr\n", ptr->num_session_groups));
+		ptr->num_session_groups = 0;
 		return GF_ISOM_INVALID_FILE;
 	}
 
@@ -10975,7 +10981,7 @@ GF_Err extr_Read(GF_Box *s, GF_BitStream *bs)
 
 	e = gf_isom_box_parse((GF_Box**) &ptr->feci, bs);
 	if (e) return e;
-	if (ptr->feci->size>ptr->size) return GF_ISOM_INVALID_MEDIA;
+	if (!ptr->feci || ptr->feci->size > ptr->size) return GF_ISOM_INVALID_MEDIA;
 	ptr->data_length = (u32) (ptr->size - ptr->feci->size);
 	ptr->data = gf_malloc(sizeof(char)*ptr->data_length);
 	gf_bs_read_data(bs, ptr->data, ptr->data_length);
