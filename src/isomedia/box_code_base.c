@@ -4425,6 +4425,9 @@ void mvex_del(GF_Box *s)
 	if (ptr->mehd) gf_isom_box_del((GF_Box*)ptr->mehd);
 	gf_isom_box_array_del(ptr->TrackExList);
 	gf_isom_box_array_del(ptr->TrackExPropList);
+	ptr->mehd = NULL;
+	ptr->TrackExList = NULL;
+	ptr->TrackExPropList = NULL;
 	gf_free(ptr);
 }
 
@@ -5067,7 +5070,11 @@ GF_Err stbl_AddBox(GF_Box *s, GF_Box *a)
 		{
 			GF_SubSampleInformationBox *subs = (GF_SubSampleInformationBox *)a;
 			GF_SubSampleInfoEntry *ent = gf_list_get(subs->Samples, 0);
-			if (ent->sample_delta==0) {
+			if (!ent) {
+				gf_list_rem(subs->Samples, 0);
+				GF_LOG(GF_LOG_WARNING, GF_LOG_CONTAINER, ("[iso file] first entry in SubSample in track SampleTable is invalid\n"));
+			}
+			else if (ent->sample_delta==0) {
 				GF_LOG(GF_LOG_WARNING, GF_LOG_CONTAINER, ("[iso file] first entry in SubSample in track SampleTable has sample_delta of 0, should be one. Fixing\n"));
 				ent->sample_delta = 1;
 			}
