@@ -261,6 +261,12 @@ static GF_ESD *MP2TS_GetESD(M2TSIn *m2ts, GF_M2TS_PES *stream, char *dsi, u32 ds
 		esd->decoderConfig->streamType = GF_STREAM_AUDIO;
 		esd->decoderConfig->objectTypeIndication = GPAC_OTI_AUDIO_EAC3;
 		break;
+	case GF_M2TS_MHAS_MAIN:
+	case GF_M2TS_MHAS_AUX:
+		esd->decoderConfig->streamType = GF_STREAM_AUDIO;
+		esd->decoderConfig->objectTypeIndication = GPAC_OTI_AUDIO_MPEGH;
+		break;
+
 	case GF_M2TS_SYSTEMS_MPEG4_SECTIONS:
 	default:
 		gf_odf_desc_del((GF_Descriptor *)esd);

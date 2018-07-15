@@ -340,6 +340,20 @@ GF_Err Media_GetESD(GF_MediaBox *mdia, u32 sampleDescIndex, GF_ESD **out_esd, Bo
 	case GF_ISOM_SUBTYPE_MH3D_MHA2:
 	case GF_ISOM_SUBTYPE_MH3D_MHM1:
 	case GF_ISOM_SUBTYPE_MH3D_MHM2:
+		if (true_desc_only) {
+			return GF_ISOM_INVALID_MEDIA;
+		} else {
+			GF_MPEGAudioSampleEntryBox *ptr = (GF_MPEGAudioSampleEntryBox *)entry;
+			esd = gf_odf_desc_esd_new(2);
+			*out_esd = esd;
+			esd->decoderConfig->streamType = GF_STREAM_AUDIO;
+			esd->decoderConfig->objectTypeIndication = GPAC_OTI_AUDIO_MPEGH;
+			esd->decoderConfig->decoderSpecificInfo->dataLength = ptr->cfg_mha ? ptr->cfg_mha->mha_config_size : 0;
+			if (ptr->cfg_mha) {
+				esd->decoderConfig->decoderSpecificInfo->data = gf_malloc(sizeof(char)*ptr->cfg_mha->mha_config_size);
+				memcpy(esd->decoderConfig->decoderSpecificInfo->data, ptr->cfg_mha->mha_config, sizeof(char)*ptr->cfg_mha->mha_config_size);
+			}
+		}
 		break;
 
 	default:

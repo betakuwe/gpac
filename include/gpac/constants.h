@@ -352,6 +352,8 @@ enum
 	/*!OTI for JPEG-2000 streams*/
 	GPAC_OTI_IMAGE_JPEG_2000 = 0x6E,
 
+	GPAC_OTI_AUDIO_MPEGH = 0x70,
+
 	/*!
 	 * \brief Extra ObjectTypeIndication
 	 *

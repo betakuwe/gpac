@@ -304,11 +304,31 @@
 		9235E0521CFECD450051D8A1 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9235E0511CFECD450051D8A1 /* VideoToolbox.framework */; };
 		9235E0531CFECD520051D8A1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28C5AA661A152BB700372C59 /* CoreFoundation.framework */; };
 		924FEE821BA6C63A003F77A6 /* iff.c in Sources */ = {isa = PBXBuildFile; fileRef = 924FEE811BA6C63A003F77A6 /* iff.c */; };
+		9257776A20FB586A006661E7 /* mpegh_iis_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = 9257776820FB584A006661E7 /* mpegh_iis_dec.c */; };
+		9257776D20FB58ED006661E7 /* libgpac.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9201F93718D5A38A003D1ACA /* libgpac.dylib */; };
+		9257776F20FB7510006661E7 /* libAACdec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9257776E20FB7510006661E7 /* libAACdec.a */; };
 		92597E4D20B4805C000365B9 /* g_crypt_openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = 92597E4820B4805B000365B9 /* g_crypt_openssl.c */; };
 		92597E4E20B4805C000365B9 /* tiny_aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 92597E4920B4805B000365B9 /* tiny_aes.h */; };
 		92597E4F20B4805C000365B9 /* g_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 92597E4A20B4805B000365B9 /* g_crypt.c */; };
 		92597E5020B4805C000365B9 /* tiny_aes.c in Sources */ = {isa = PBXBuildFile; fileRef = 92597E4B20B4805B000365B9 /* tiny_aes.c */; };
 		92597E5120B4805C000365B9 /* g_crypt_tinyaes.c in Sources */ = {isa = PBXBuildFile; fileRef = 92597E4C20B4805B000365B9 /* g_crypt_tinyaes.c */; };
+		92A5059720FB769900049B29 /* libCDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059620FB769900049B29 /* libCDK.a */; };
+		92A505A820FB76B800049B29 /* libDRCGainDec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059820FB76B800049B29 /* libDRCGainDec.a */; };
+		92A505AA20FB76B800049B29 /* libArithCoding.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059A20FB76B800049B29 /* libArithCoding.a */; };
+		92A505AB20FB76B800049B29 /* libDRCSelectionProcess.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059B20FB76B800049B29 /* libDRCSelectionProcess.a */; };
+		92A505AC20FB76B800049B29 /* libTDlimit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059C20FB76B800049B29 /* libTDlimit.a */; };
+		92A505AD20FB76B800049B29 /* libUIManager.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059D20FB76B800049B29 /* libUIManager.a */; };
+		92A505AE20FB76B800049B29 /* libFormatConverter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059E20FB76B800049B29 /* libFormatConverter.a */; };
+		92A505AF20FB76B800049B29 /* libDRCBitstreamDec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059F20FB76B800049B29 /* libDRCBitstreamDec.a */; };
+		92A505B020FB76B800049B29 /* libMpegTPDec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A020FB76B800049B29 /* libMpegTPDec.a */; };
+		92A505B120FB76B800049B29 /* libTBEDec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A120FB76B800049B29 /* libTBEDec.a */; };
+		92A505B220FB76B900049B29 /* libDRCdec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A220FB76B800049B29 /* libDRCdec.a */; };
+		92A505B320FB76B900049B29 /* libgVBAPRenderer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A320FB76B800049B29 /* libgVBAPRenderer.a */; };
+		92A505B420FB76B900049B29 /* libMpegFileRead.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A420FB76B800049B29 /* libMpegFileRead.a */; };
+		92A505B520FB76B900049B29 /* libPCMutils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A520FB76B800049B29 /* libPCMutils.a */; };
+		92A505B620FB76B900049B29 /* libIGFdec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A620FB76B800049B29 /* libIGFdec.a */; };
+		92A505B720FB76B900049B29 /* libSYS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A505A720FB76B800049B29 /* libSYS.a */; };
+		92A505B820FB77AF00049B29 /* libHOADec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92A5059920FB76B800049B29 /* libHOADec.a */; };
 		92A7E9592003BA8F000C22DE /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9235E0511CFECD450051D8A1 /* VideoToolbox.framework */; };
 		92A7E95A2003BA9B000C22DE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2839E2C41A163711002D73E1 /* CoreMedia.framework */; };
 		92A7E95B2003BAA3000C22DE /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9235E04F1CFECD370051D8A1 /* CoreVideo.framework */; };
@@ -557,6 +577,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 9225732318D7267900D6FD98;
 			remoteInfo = ogg_in;
+		};
+		9257776B20FB5880006661E7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9201F92918D5A359003D1ACA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9257776220FB5826006661E7;
+			remoteInfo = mpegh_iis_dec;
 		};
 		92AAF17018D6F87100E2FF12 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1181,11 +1208,31 @@
 		9235E04F1CFECD370051D8A1 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		9235E0511CFECD450051D8A1 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		924FEE811BA6C63A003F77A6 /* iff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = iff.c; sourceTree = "<group>"; };
+		9257776320FB5826006661E7 /* gm_mpegh_iis_dec.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = gm_mpegh_iis_dec.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9257776820FB584A006661E7 /* mpegh_iis_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mpegh_iis_dec.c; path = ../../modules/mpegh_iis_dec/mpegh_iis_dec.c; sourceTree = "<group>"; };
+		9257776E20FB7510006661E7 /* libAACdec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libAACdec.a; path = ../../extra_lib/lib/gcc/libAACdec.a; sourceTree = "<group>"; };
 		92597E4820B4805B000365B9 /* g_crypt_openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt_openssl.c; path = crypto/g_crypt_openssl.c; sourceTree = "<group>"; };
 		92597E4920B4805B000365B9 /* tiny_aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tiny_aes.h; path = crypto/tiny_aes.h; sourceTree = "<group>"; };
 		92597E4A20B4805B000365B9 /* g_crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt.c; path = crypto/g_crypt.c; sourceTree = "<group>"; };
 		92597E4B20B4805B000365B9 /* tiny_aes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tiny_aes.c; path = crypto/tiny_aes.c; sourceTree = "<group>"; };
 		92597E4C20B4805B000365B9 /* g_crypt_tinyaes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt_tinyaes.c; path = crypto/g_crypt_tinyaes.c; sourceTree = "<group>"; };
+		92A5059620FB769900049B29 /* libCDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCDK.a; path = ../../extra_lib/lib/gcc/libCDK.a; sourceTree = "<group>"; };
+		92A5059820FB76B800049B29 /* libDRCGainDec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDRCGainDec.a; path = ../../extra_lib/lib/gcc/libDRCGainDec.a; sourceTree = "<group>"; };
+		92A5059920FB76B800049B29 /* libHOADec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libHOADec.a; path = ../../extra_lib/lib/gcc/libHOADec.a; sourceTree = "<group>"; };
+		92A5059A20FB76B800049B29 /* libArithCoding.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libArithCoding.a; path = ../../extra_lib/lib/gcc/libArithCoding.a; sourceTree = "<group>"; };
+		92A5059B20FB76B800049B29 /* libDRCSelectionProcess.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDRCSelectionProcess.a; path = ../../extra_lib/lib/gcc/libDRCSelectionProcess.a; sourceTree = "<group>"; };
+		92A5059C20FB76B800049B29 /* libTDlimit.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libTDlimit.a; path = ../../extra_lib/lib/gcc/libTDlimit.a; sourceTree = "<group>"; };
+		92A5059D20FB76B800049B29 /* libUIManager.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libUIManager.a; path = ../../extra_lib/lib/gcc/libUIManager.a; sourceTree = "<group>"; };
+		92A5059E20FB76B800049B29 /* libFormatConverter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFormatConverter.a; path = ../../extra_lib/lib/gcc/libFormatConverter.a; sourceTree = "<group>"; };
+		92A5059F20FB76B800049B29 /* libDRCBitstreamDec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDRCBitstreamDec.a; path = ../../extra_lib/lib/gcc/libDRCBitstreamDec.a; sourceTree = "<group>"; };
+		92A505A020FB76B800049B29 /* libMpegTPDec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMpegTPDec.a; path = ../../extra_lib/lib/gcc/libMpegTPDec.a; sourceTree = "<group>"; };
+		92A505A120FB76B800049B29 /* libTBEDec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libTBEDec.a; path = ../../extra_lib/lib/gcc/libTBEDec.a; sourceTree = "<group>"; };
+		92A505A220FB76B800049B29 /* libDRCdec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDRCdec.a; path = ../../extra_lib/lib/gcc/libDRCdec.a; sourceTree = "<group>"; };
+		92A505A320FB76B800049B29 /* libgVBAPRenderer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgVBAPRenderer.a; path = ../../extra_lib/lib/gcc/libgVBAPRenderer.a; sourceTree = "<group>"; };
+		92A505A420FB76B800049B29 /* libMpegFileRead.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMpegFileRead.a; path = ../../extra_lib/lib/gcc/libMpegFileRead.a; sourceTree = "<group>"; };
+		92A505A520FB76B800049B29 /* libPCMutils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPCMutils.a; path = ../../extra_lib/lib/gcc/libPCMutils.a; sourceTree = "<group>"; };
+		92A505A620FB76B800049B29 /* libIGFdec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libIGFdec.a; path = ../../extra_lib/lib/gcc/libIGFdec.a; sourceTree = "<group>"; };
+		92A505A720FB76B800049B29 /* libSYS.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSYS.a; path = ../../extra_lib/lib/gcc/libSYS.a; sourceTree = "<group>"; };
 		92A7E95C2003BAAA000C22DE /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		92A7E95E2003BACB000C22DE /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		92A7E9602003BAE8000C22DE /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -1426,6 +1473,32 @@
 			buildActionMask = 2147483647;
 			files = (
 				9225733418D726D800D6FD98 /* libgpac.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9257776020FB5826006661E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				92A505B820FB77AF00049B29 /* libHOADec.a in Frameworks */,
+				92A505A820FB76B800049B29 /* libDRCGainDec.a in Frameworks */,
+				92A505AA20FB76B800049B29 /* libArithCoding.a in Frameworks */,
+				92A505AB20FB76B800049B29 /* libDRCSelectionProcess.a in Frameworks */,
+				92A505AC20FB76B800049B29 /* libTDlimit.a in Frameworks */,
+				92A505AD20FB76B800049B29 /* libUIManager.a in Frameworks */,
+				92A505AE20FB76B800049B29 /* libFormatConverter.a in Frameworks */,
+				92A505AF20FB76B800049B29 /* libDRCBitstreamDec.a in Frameworks */,
+				92A505B020FB76B800049B29 /* libMpegTPDec.a in Frameworks */,
+				92A505B120FB76B800049B29 /* libTBEDec.a in Frameworks */,
+				92A505B220FB76B900049B29 /* libDRCdec.a in Frameworks */,
+				92A505B320FB76B900049B29 /* libgVBAPRenderer.a in Frameworks */,
+				92A505B420FB76B900049B29 /* libMpegFileRead.a in Frameworks */,
+				92A505B520FB76B900049B29 /* libPCMutils.a in Frameworks */,
+				92A505B620FB76B900049B29 /* libIGFdec.a in Frameworks */,
+				92A505B720FB76B900049B29 /* libSYS.a in Frameworks */,
+				9257776F20FB7510006661E7 /* libAACdec.a in Frameworks */,
+				92A5059720FB769900049B29 /* libCDK.a in Frameworks */,
+				9257776D20FB58ED006661E7 /* libgpac.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1775,6 +1848,7 @@
 				92AAF1BE18D70B1C00E2FF12 /* gm_openhevc_dec.dylib */,
 				9225732418D7267900D6FD98 /* gm_ogg_in.dylib */,
 				92CC44F91DC0D22C0084D6A6 /* libopensvc.dylib */,
+				9257776320FB5826006661E7 /* gm_mpegh_iis_dec.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2309,6 +2383,14 @@
 			name = vtb_decode;
 			sourceTree = "<group>";
 		};
+		9257776720FB5833006661E7 /* mpegh_iis_dec */ = {
+			isa = PBXGroup;
+			children = (
+				9257776820FB584A006661E7 /* mpegh_iis_dec.c */,
+			);
+			name = mpegh_iis_dec;
+			sourceTree = "<group>";
+		};
 		92A9D3C81CCA79BD006FF303 /* amr_in */ = {
 			isa = PBXGroup;
 			children = (
@@ -2620,6 +2702,24 @@
 		92B02F4D1DD2004300F85E77 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				92A5059A20FB76B800049B29 /* libArithCoding.a */,
+				92A5059F20FB76B800049B29 /* libDRCBitstreamDec.a */,
+				92A505A220FB76B800049B29 /* libDRCdec.a */,
+				92A5059820FB76B800049B29 /* libDRCGainDec.a */,
+				92A5059B20FB76B800049B29 /* libDRCSelectionProcess.a */,
+				92A5059E20FB76B800049B29 /* libFormatConverter.a */,
+				92A505A320FB76B800049B29 /* libgVBAPRenderer.a */,
+				92A5059920FB76B800049B29 /* libHOADec.a */,
+				92A505A620FB76B800049B29 /* libIGFdec.a */,
+				92A505A420FB76B800049B29 /* libMpegFileRead.a */,
+				92A505A020FB76B800049B29 /* libMpegTPDec.a */,
+				92A505A520FB76B800049B29 /* libPCMutils.a */,
+				92A505A720FB76B800049B29 /* libSYS.a */,
+				92A505A120FB76B800049B29 /* libTBEDec.a */,
+				92A5059C20FB76B800049B29 /* libTDlimit.a */,
+				92A5059D20FB76B800049B29 /* libUIManager.a */,
+				92A5059620FB769900049B29 /* libCDK.a */,
+				9257776E20FB7510006661E7 /* libAACdec.a */,
 				92A7E9602003BAE8000C22DE /* Security.framework */,
 				92A7E95E2003BACB000C22DE /* AudioToolbox.framework */,
 				92A7E95C2003BAAA000C22DE /* CoreServices.framework */,
@@ -2786,6 +2886,7 @@
 		92BE50AD18D6376A00AA59D8 /* modules */ = {
 			isa = PBXGroup;
 			children = (
+				9257776720FB5833006661E7 /* mpegh_iis_dec */,
 				9225732918D7267D00D6FD98 /* ogg_in */,
 				92AAF17D18D6F8DB00E2FF12 /* aac_in */,
 				92AAF18C18D6FA1A00E2FF12 /* ac3_in */,
@@ -3051,6 +3152,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9257776120FB5826006661E7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		92AAF0D118D6DB2D00E2FF12 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -3174,6 +3282,23 @@
 			name = ogg_in;
 			productName = ogg_in;
 			productReference = 9225732418D7267900D6FD98 /* gm_ogg_in.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		9257776220FB5826006661E7 /* mpegh_iis_dec */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9257776620FB5826006661E7 /* Build configuration list for PBXNativeTarget "mpegh_iis_dec" */;
+			buildPhases = (
+				9257775F20FB5826006661E7 /* Sources */,
+				9257776020FB5826006661E7 /* Frameworks */,
+				9257776120FB5826006661E7 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mpegh_iis_dec;
+			productName = mpegh_iis_dec;
+			productReference = 9257776320FB5826006661E7 /* gm_mpegh_iis_dec.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		92AAF0D218D6DB2D00E2FF12 /* sdl_out */ = {
@@ -3340,6 +3465,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				9257776C20FB5880006661E7 /* PBXTargetDependency */,
 				9225733618D727B500D6FD98 /* PBXTargetDependency */,
 				9225731518D717B400D6FD98 /* PBXTargetDependency */,
 				9225731318D717B100D6FD98 /* PBXTargetDependency */,
@@ -3362,6 +3488,12 @@
 			attributes = {
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Telecom ParisTech";
+				TargetAttributes = {
+					9257776220FB5826006661E7 = {
+						CreatedOnToolsVersion = 9.3;
+						ProvisioningStyle = Manual;
+					};
+				};
 			};
 			buildConfigurationList = 9201F92C18D5A359003D1ACA /* Build configuration list for PBXProject "gpac" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -3389,6 +3521,7 @@
 				92AAF1BD18D70B1C00E2FF12 /* openhevc_dec */,
 				9225732318D7267900D6FD98 /* ogg_in */,
 				2839E27D1A162C24002D73E1 /* opensvc */,
+				9257776220FB5826006661E7 /* mpegh_iis_dec */,
 			);
 		};
 /* End PBXProject section */
@@ -3758,6 +3891,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9257775F20FB5826006661E7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9257776A20FB586A006661E7 /* mpegh_iis_dec.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		92AAF0CF18D6DB2D00E2FF12 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -3877,6 +4018,11 @@
 			isa = PBXTargetDependency;
 			target = 9225732318D7267900D6FD98 /* ogg_in */;
 			targetProxy = 9225733518D727B500D6FD98 /* PBXContainerItemProxy */;
+		};
+		9257776C20FB5880006661E7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9257776220FB5826006661E7 /* mpegh_iis_dec */;
+			targetProxy = 9257776B20FB5880006661E7 /* PBXContainerItemProxy */;
 		};
 		92AAF17118D6F87100E2FF12 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -4347,6 +4493,103 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		9257776420FB5826006661E7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = gm_;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LD_DYLIB_INSTALL_NAME = /gm_mpegh_iis_dec.dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				OTHER_LDFLAGS = "-lstdc++";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		9257776520FB5826006661E7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_NS_ASSERTIONS = NO;
+				EXECUTABLE_PREFIX = gm_;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LD_DYLIB_INSTALL_NAME = /gm_mpegh_iis_dec.dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-lstdc++";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
@@ -5068,6 +5311,15 @@
 			buildConfigurations = (
 				9225732518D7267900D6FD98 /* Debug */,
 				9225732618D7267900D6FD98 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9257776620FB5826006661E7 /* Build configuration list for PBXNativeTarget "mpegh_iis_dec" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9257776420FB5826006661E7 /* Debug */,
+				9257776520FB5826006661E7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
