@@ -690,10 +690,11 @@ GF_Err gf_dasher_add_base_url(GF_DASHSegmenter *dasher, const char *base_url);
  *	\param enable enable usage of URL template
  *	\param default_template template for the segment name
  *	\param default_extension extension for the segment name
+ *	\param default_extension extension for the initialization segment name
  *	\return error code if any
 */
 
-GF_Err gf_dasher_enable_url_template(GF_DASHSegmenter *dasher, Bool enable, const char *default_template, const char *default_extension);
+GF_Err gf_dasher_enable_url_template(GF_DASHSegmenter *dasher, Bool enable, const char *default_template, const char *default_extension, const char *default_init_extension);
 
 /*!
  Enable Segment Timeline template - may be overriden by the current profile
@@ -918,6 +919,14 @@ GF_Err gf_dasher_set_split_on_closest(GF_DASHSegmenter *dasher, Bool split_on_cl
  *	\return error code if any
 */
 GF_Err gf_dasher_set_cues(GF_DASHSegmenter *dasher, const char *cues_file, Bool strict_cues);
+
+/*!
+ Sets ISOBMFF options.
+ *	\param dasher the DASH segmenter object
+ *	\param mvex_after_traks if true the mvex box will be after the trak boxes
+ *	\return error code if any
+ */
+GF_Err gf_dasher_set_isobmff_options(GF_DASHSegmenter *dasher, Bool mvex_after_traks);
 
 /*!
  Adds a media input to the DASHer

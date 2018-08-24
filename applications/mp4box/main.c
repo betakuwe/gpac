@@ -379,6 +379,7 @@ void PrintDASHUsage()
 	        "                      $Segment=NAME$ is replaced by NAME for media segments, ignored for init segments. May occur multiple times.\n"
 			"\n"
 	        " -segment-ext name    sets the segment extension. Default is m4s, \"null\" means no extension\n"
+	        " -init-segment-ext n  sets the segment extension for init segments (and index and bitstream switching segments). Default is mp4, \"null\" means no extension\n"
 	        " -segment-timeline    uses SegmentTimeline when generating segments.\n"
 	        " -segment-marker MARK adds a box of type \'MARK\' at the end of each DASH segment. MARK shall be a 4CC identifier\n"
 	        " -insert-utc          inserts UTC clock at the begining of each ISOBMF segment\n"
@@ -405,6 +406,7 @@ void PrintDASHUsage()
 	        " -pssh-moof           [deprecated] use -pssh=f\n"
 	        " -pssh=MODE           sets pssh store mode. Mode can be v (moov), f (frag), m (mpd) mv/vm (moov+mpd) mf/fm (moof+mpd).\n"
 	        " -sample-groups-traf  stores sample group descriptions in traf (duplicated for each traf). If not used, sample group descriptions are stored in the movie box.\n"
+			" -mvex-after-traks    Stores mvex box after trak boxes within the moov box. If not used, mvex is before.\n"
 	        " -no-cache            disable file cache for dash inputs .\n"
 	        " -no-loop             disables looping content in live mode and uses period switch instead.\n"
 	        " -bound               enables video segmentation with same method as audio (i.e.: always try to split before or at the segment boundary - not after)\n"
@@ -1967,6 +1969,7 @@ GF_MemTrackerType mem_track = GF_MemTrackerNone;
 Bool dump_iod = GF_FALSE;
 GF_DASHPSSHMode pssh_mode = 0;
 Bool samplegroups_in_traf = GF_FALSE;
+Bool mvex_after_traks = GF_FALSE;
 Bool daisy_chain_sidx = GF_FALSE;
 Bool single_segment = GF_FALSE;
 Bool single_file = GF_FALSE;
@@ -1996,6 +1999,7 @@ GF_DashSegmenterInput *dash_inputs = NULL;
 u32 nb_dash_inputs = 0;
 char *gf_logs = NULL;
 char *seg_ext = NULL;
+char *init_seg_ext = NULL;
 const char *dash_title = NULL;
 const char *dash_source = NULL;
 const char *dash_more_info = NULL;
@@ -3393,6 +3397,11 @@ Bool mp4box_parse_args(int argc, char **argv)
 			seg_ext = argv[i + 1];
 			i++;
 		}
+		else if (!stricmp(arg, "-init-segment-ext")) {
+			CHECK_NEXT_ARG
+			init_seg_ext = argv[i + 1];
+			i++;
+		}
 		else if (!stricmp(arg, "-bs-switching")) {
 			CHECK_NEXT_ARG
 			if (!stricmp(argv[i + 1], "no") || !stricmp(argv[i + 1], "off")) bitstream_switching_mode = GF_DASH_BSMODE_NONE;
@@ -3528,6 +3537,9 @@ Bool mp4box_parse_args(int argc, char **argv)
 		}
 		else if (!stricmp(arg, "-sample-groups-traf")) {
 			samplegroups_in_traf = 1;
+		}
+		else if (!stricmp(arg, "-mvex-after-traks")) {
+			mvex_after_traks = GF_TRUE;
 		}
 		else if (!stricmp(arg, "-dash-profile") || !stricmp(arg, "-profile")) {
 			CHECK_NEXT_ARG
@@ -4208,7 +4220,7 @@ int mp4boxMain(int argc, char **argv)
 			use_url_template = GF_TRUE;
 		}
 
-		e = gf_dasher_enable_url_template(dasher, (Bool) use_url_template, seg_name, seg_ext);
+		e = gf_dasher_enable_url_template(dasher, (Bool) use_url_template, seg_name, seg_ext, init_seg_ext);
 		if (!e) e = gf_dasher_enable_segment_timeline(dasher, segment_timeline);
 		if (!e) e = gf_dasher_enable_single_segment(dasher, single_segment);
 		if (!e) e = gf_dasher_enable_single_file(dasher, single_file);
@@ -4233,6 +4245,7 @@ int mp4boxMain(int argc, char **argv)
 		if (!e) e = gf_dasher_set_split_on_bound(dasher, split_on_bound);
 		if (!e) e = gf_dasher_set_split_on_closest(dasher, split_on_closest);
 		if (!e && dash_cues) e = gf_dasher_set_cues(dasher, dash_cues, strict_cues);
+		if (!e) e = gf_dasher_set_isobmff_options(dasher, mvex_after_traks);
 
 		for (i=0; i < nb_dash_inputs; i++) {
 			if (!e) e = gf_dasher_add_input(dasher, &dash_inputs[i]);
