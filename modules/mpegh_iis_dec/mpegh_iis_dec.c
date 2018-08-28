@@ -38,7 +38,6 @@
 #define MHAS_FRAME_INDEX_FIRST 0
 #define MHAS_FRAME_INDEX_LAST 2556
 
-
 typedef struct
 {
 	HANDLE_AACDECODER codec;
@@ -74,10 +73,11 @@ static GF_Err MPEGHIIS_AttachStream(GF_BaseDecoder *ifcg, GF_ESD *esd)
 		GF_LOG(GF_LOG_ERROR, GF_LOG_CODEC, ("[MPEGHIISDec] Error initializing decoder\n"));
 		return GF_IO_ERR;
 	}
-//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 2);
-	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 12);
 //	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, -1);
-	
+//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 2); //stereo
+//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 6); //5.1
+	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 12); //7.1
+
 	if (esd->decoderConfig->decoderSpecificInfo && esd->decoderConfig->decoderSpecificInfo->dataLength) {
 		//push config
 	 	aacDecoder_ConfigRaw(ctx->codec, (UCHAR**)&esd->decoderConfig->decoderSpecificInfo->data, esd->decoderConfig->decoderSpecificInfo->dataLength);

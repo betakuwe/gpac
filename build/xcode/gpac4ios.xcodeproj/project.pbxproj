@@ -446,11 +446,6 @@
 		92CF72A7205FD9F00037974C /* libVRPlay.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 925413D12029EC91003D66B7 /* libVRPlay.a */; };
 		92D127FE1BBADC7F00DA003B /* shaders in Resources */ = {isa = PBXBuildFile; fileRef = 92D127FD1BBADC7F00DA003B /* shaders */; };
 		92D3C62C2031ECE600BA1735 /* atsc_dmx.c in Sources */ = {isa = PBXBuildFile; fileRef = 92D3C62B2031ECE600BA1735 /* atsc_dmx.c */; };
-		92DC362520B47FB600C48E39 /* g_crypt_openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = 92DC362020B47FB600C48E39 /* g_crypt_openssl.c */; };
-		92DC362620B47FB600C48E39 /* tiny_aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 92DC362120B47FB600C48E39 /* tiny_aes.h */; };
-		92DC362720B47FB600C48E39 /* g_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 92DC362220B47FB600C48E39 /* g_crypt.c */; };
-		92DC362820B47FB600C48E39 /* tiny_aes.c in Sources */ = {isa = PBXBuildFile; fileRef = 92DC362320B47FB600C48E39 /* tiny_aes.c */; };
-		92DC362920B47FB600C48E39 /* g_crypt_tinyaes.c in Sources */ = {isa = PBXBuildFile; fileRef = 92DC362420B47FB600C48E39 /* g_crypt_tinyaes.c */; };
 		92DF5CA61BA6C6F80058A7BA /* iff.c in Sources */ = {isa = PBXBuildFile; fileRef = 92DF5CA51BA6C6F80058A7BA /* iff.c */; };
 		92E8C78B1A0CD57A00E0436D /* timedtext_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = 92FA826116F254F50002629E /* timedtext_dec.c */; };
 		92E8C78C1A0CD57A00E0436D /* timedtext_in.c in Sources */ = {isa = PBXBuildFile; fileRef = 92FA826216F254F50002629E /* timedtext_in.c */; };
@@ -458,6 +453,13 @@
 		92E8C78E1A0CD57A00E0436D /* saf_in.c in Sources */ = {isa = PBXBuildFile; fileRef = 92FA825D16F254C60002629E /* saf_in.c */; };
 		92E8C78F1A0CD57A00E0436D /* audio_filter.c in Sources */ = {isa = PBXBuildFile; fileRef = 92FA825B16F254AF0002629E /* audio_filter.c */; };
 		92E8C7901A0CD58300E0436D /* validator.c in Sources */ = {isa = PBXBuildFile; fileRef = 92FA825916F2549D0002629E /* validator.c */; };
+		92F46B1D213556CB006D49EB /* g_crypt_openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F46B18213556CA006D49EB /* g_crypt_openssl.c */; };
+		92F46B1E213556CB006D49EB /* tiny_aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 92F46B19213556CA006D49EB /* tiny_aes.h */; };
+		92F46B1F213556CB006D49EB /* g_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F46B1A213556CA006D49EB /* g_crypt.c */; };
+		92F46B20213556CB006D49EB /* tiny_aes.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F46B1B213556CA006D49EB /* tiny_aes.c */; };
+		92F46B21213556CB006D49EB /* g_crypt_tinyaes.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F46B1C213556CB006D49EB /* g_crypt_tinyaes.c */; };
+		92F46B23213556E8006D49EB /* mpegh_iis_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F46B22213556E8006D49EB /* mpegh_iis_dec.c */; };
+		92F46B8521357168006D49EB /* libmpeghiisdec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 92F46B8421357168006D49EB /* libmpeghiisdec.a */; };
 		92F8D46E1F713E5F00616F7C /* netctrl.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F8D46D1F713E5F00616F7C /* netctrl.c */; };
 		92F930861A5ADC1A0072A85C /* os_divers.c in Sources */ = {isa = PBXBuildFile; fileRef = 92F930841A5ADC1A0072A85C /* os_divers.c */; };
 		92FA48891D059A820072C8A4 /* glcontext.m in Sources */ = {isa = PBXBuildFile; fileRef = 92FA48881D059A820072C8A4 /* glcontext.m */; };
@@ -1024,12 +1026,14 @@
 		92C7F1991AA8B48E00BA5B4C /* gui */ = {isa = PBXFileReference; lastKnownFileType = folder; name = gui; path = ../../gui; sourceTree = "<group>"; };
 		92D127FD1BBADC7F00DA003B /* shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shaders; path = ../../shaders; sourceTree = "<group>"; };
 		92D3C62B2031ECE600BA1735 /* atsc_dmx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = atsc_dmx.c; sourceTree = "<group>"; };
-		92DC362020B47FB600C48E39 /* g_crypt_openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt_openssl.c; path = ../../../src/crypto/g_crypt_openssl.c; sourceTree = "<group>"; };
-		92DC362120B47FB600C48E39 /* tiny_aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tiny_aes.h; path = ../../../src/crypto/tiny_aes.h; sourceTree = "<group>"; };
-		92DC362220B47FB600C48E39 /* g_crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt.c; path = ../../../src/crypto/g_crypt.c; sourceTree = "<group>"; };
-		92DC362320B47FB600C48E39 /* tiny_aes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tiny_aes.c; path = ../../../src/crypto/tiny_aes.c; sourceTree = "<group>"; };
-		92DC362420B47FB600C48E39 /* g_crypt_tinyaes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt_tinyaes.c; path = ../../../src/crypto/g_crypt_tinyaes.c; sourceTree = "<group>"; };
 		92DF5CA51BA6C6F80058A7BA /* iff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = iff.c; sourceTree = "<group>"; };
+		92F46B18213556CA006D49EB /* g_crypt_openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt_openssl.c; path = ../../src/crypto/g_crypt_openssl.c; sourceTree = "<group>"; };
+		92F46B19213556CA006D49EB /* tiny_aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tiny_aes.h; path = ../../src/crypto/tiny_aes.h; sourceTree = "<group>"; };
+		92F46B1A213556CA006D49EB /* g_crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt.c; path = ../../src/crypto/g_crypt.c; sourceTree = "<group>"; };
+		92F46B1B213556CA006D49EB /* tiny_aes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tiny_aes.c; path = ../../src/crypto/tiny_aes.c; sourceTree = "<group>"; };
+		92F46B1C213556CB006D49EB /* g_crypt_tinyaes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = g_crypt_tinyaes.c; path = ../../src/crypto/g_crypt_tinyaes.c; sourceTree = "<group>"; };
+		92F46B22213556E8006D49EB /* mpegh_iis_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mpegh_iis_dec.c; path = ../../modules/mpegh_iis_dec/mpegh_iis_dec.c; sourceTree = "<group>"; };
+		92F46B8421357168006D49EB /* libmpeghiisdec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmpeghiisdec.a; path = ../../extra_lib/lib/iOS/libmpeghiisdec.a; sourceTree = "<group>"; };
 		92F8D46D1F713E5F00616F7C /* netctrl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = netctrl.c; path = ../../modules/netctrl/netctrl.c; sourceTree = "<group>"; };
 		92F930841A5ADC1A0072A85C /* os_divers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = os_divers.c; sourceTree = "<group>"; };
 		92F930851A5ADC1A0072A85C /* os_file.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = os_file.c; sourceTree = "<group>"; };
@@ -1080,6 +1084,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				92F46B8521357168006D49EB /* libmpeghiisdec.a in Frameworks */,
 				92CF72A7205FD9F00037974C /* libVRPlay.a in Frameworks */,
 				896CBC8921105A6900220377 /* libaom.a in Frameworks */,
 				896CBC872110598E00220377 /* Security.framework in Frameworks */,
@@ -1156,6 +1161,7 @@
 		7184780712785F7B00917298 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				92F46B8421357168006D49EB /* libmpeghiisdec.a */,
 				92697FDC2029EE98001904FF /* libArkamysVRPlay.a */,
 				925413D12029EC91003D66B7 /* libVRPlay.a */,
 				896CBC8821105A6900220377 /* libaom.a */,
@@ -1320,7 +1326,7 @@
 				71CCF35E12770A8C00339E12 /* include */,
 				71CCF1391277045100339E12 /* bifs */,
 				71CCF14A1277045100339E12 /* compositor */,
-				9273F71320B47F4D00DADC67 /* crypto */,
+				92F46B17213556B6006D49EB /* crypto */,
 				71CCF1911277045100339E12 /* ietf */,
 				71CCF19F1277045100339E12 /* isomedia */,
 				71CCF1B91277045100339E12 /* laser */,
@@ -1812,18 +1818,6 @@
 			path = modules;
 			sourceTree = "<group>";
 		};
-		9273F71320B47F4D00DADC67 /* crypto */ = {
-			isa = PBXGroup;
-			children = (
-				92DC362020B47FB600C48E39 /* g_crypt_openssl.c */,
-				92DC362420B47FB600C48E39 /* g_crypt_tinyaes.c */,
-				92DC362220B47FB600C48E39 /* g_crypt.c */,
-				92DC362320B47FB600C48E39 /* tiny_aes.c */,
-				92DC362120B47FB600C48E39 /* tiny_aes.h */,
-			);
-			path = crypto;
-			sourceTree = "<group>";
-		};
 		929A929516EF8A7500B7C64F /* modules */ = {
 			isa = PBXGroup;
 			children = (
@@ -1848,6 +1842,7 @@
 				71A19937127876D300ACFF58 /* mad_dec.c */,
 				71A19939127876D300ACFF58 /* mp3_in.c */,
 				71179CBF1292EC1800A83216 /* mpd_in.c */,
+				92F46B22213556E8006D49EB /* mpegh_iis_dec.c */,
 				71A1997D1278775900ACFF58 /* mpegts_in.c */,
 				97E29F6D17D114E900904FBF /* mse_in.c */,
 				92F8D46D1F713E5F00616F7C /* netctrl.c */,
@@ -2009,6 +2004,18 @@
 			name = "Recovered References";
 			sourceTree = "<group>";
 		};
+		92F46B17213556B6006D49EB /* crypto */ = {
+			isa = PBXGroup;
+			children = (
+				92F46B18213556CA006D49EB /* g_crypt_openssl.c */,
+				92F46B1C213556CB006D49EB /* g_crypt_tinyaes.c */,
+				92F46B1A213556CA006D49EB /* g_crypt.c */,
+				92F46B1B213556CA006D49EB /* tiny_aes.c */,
+				92F46B19213556CA006D49EB /* tiny_aes.h */,
+			);
+			name = crypto;
+			sourceTree = "<group>";
+		};
 		92FA488A1D05DADC0072C8A4 /* vtb_decoder */ = {
 			isa = PBXGroup;
 			children = (
@@ -2078,7 +2085,7 @@
 				922EB5801AAE13C500DF46D0 /* dash.h in Headers */,
 				71CCF3C512770A8C00339E12 /* compositor_dev.h in Headers */,
 				71CCF3C612770A8C00339E12 /* crypt_dev.h in Headers */,
-				92DC362620B47FB600C48E39 /* tiny_aes.h in Headers */,
+				92F46B1E213556CB006D49EB /* tiny_aes.h in Headers */,
 				71CCF3C712770A8C00339E12 /* dvb_mpe_dev.h in Headers */,
 				71CCF3C812770A8C00339E12 /* ietf_dev.h in Headers */,
 				71CCF3C912770A8C00339E12 /* isomedia_dev.h in Headers */,
@@ -2375,6 +2382,7 @@
 				71CCF2731277045100339E12 /* mpeg4_geometry_ils2d.c in Sources */,
 				71CCF2741277045100339E12 /* mpeg4_gradients.c in Sources */,
 				71CCF2751277045100339E12 /* mpeg4_grouping.c in Sources */,
+				92F46B23213556E8006D49EB /* mpegh_iis_dec.c in Sources */,
 				71CCF2771277045100339E12 /* mpeg4_grouping_2d.c in Sources */,
 				71CCF2781277045100339E12 /* mpeg4_grouping_3d.c in Sources */,
 				71CCF2791277045100339E12 /* mpeg4_layer_2d.c in Sources */,
@@ -2432,7 +2440,7 @@
 				71CCF2B21277045100339E12 /* hint_track.c in Sources */,
 				71CCF2B31277045100339E12 /* hinting.c in Sources */,
 				71CCF2B41277045100339E12 /* drm_sample.c in Sources */,
-				92DC362520B47FB600C48E39 /* g_crypt_openssl.c in Sources */,
+				92F46B1D213556CB006D49EB /* g_crypt_openssl.c in Sources */,
 				71CCF2B51277045100339E12 /* isom_intern.c in Sources */,
 				71CCF2B61277045100339E12 /* isom_read.c in Sources */,
 				71CCF2B71277045100339E12 /* isom_store.c in Sources */,
@@ -2452,7 +2460,7 @@
 				71CCF2C41277045100339E12 /* lsr_tables.c in Sources */,
 				71CCF2D41277045100339E12 /* av_parsers.c in Sources */,
 				71CCF2D51277045100339E12 /* avilib.c in Sources */,
-				92DC362820B47FB600C48E39 /* tiny_aes.c in Sources */,
+				92F46B20213556CB006D49EB /* tiny_aes.c in Sources */,
 				71CCF2D61277045100339E12 /* dvb_mpe.c in Sources */,
 				71CCF2D71277045100339E12 /* filestreamer.c in Sources */,
 				71CCF2D81277045100339E12 /* gpac_ogg.c in Sources */,
@@ -2515,7 +2523,7 @@
 				71CCF3101277045100339E12 /* vrml_route.c in Sources */,
 				71CCF3111277045100339E12 /* vrml_script.c in Sources */,
 				71CCF3121277045100339E12 /* vrml_smjs.c in Sources */,
-				92DC362720B47FB600C48E39 /* g_crypt.c in Sources */,
+				92F46B1F213556CB006D49EB /* g_crypt.c in Sources */,
 				9214AD341D0181A5009D3CFD /* ac3_in.c in Sources */,
 				71CCF3131277045100339E12 /* vrml_tools.c in Sources */,
 				71CCF3141277045100339E12 /* x3d_nodes.c in Sources */,
@@ -2536,7 +2544,7 @@
 				71CCF3241277045100339E12 /* network_service.c in Sources */,
 				71CCF3251277045100339E12 /* object_browser.c in Sources */,
 				71CCF3261277045100339E12 /* object_manager.c in Sources */,
-				92DC362920B47FB600C48E39 /* g_crypt_tinyaes.c in Sources */,
+				92F46B21213556CB006D49EB /* g_crypt_tinyaes.c in Sources */,
 				71CCF3271277045100339E12 /* scene.c in Sources */,
 				71CCF3281277045100339E12 /* svg_external.c in Sources */,
 				71CCF3291277045100339E12 /* term_node_init.c in Sources */,
@@ -2629,7 +2637,7 @@
 				);
 				INFOPLIST_FILE = "../../applications/osmo4_ios/osmo4ios-Info.plist";
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../extra_lib/lib/iOS\"",
@@ -2637,7 +2645,7 @@
 				MACOSX_DEPLOYMENT_TARGET = "";
 				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = "";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-lstdc++";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.telecom-paristech.gpac";
 				PRODUCT_NAME = osmo4ios;
 				PROVISIONING_PROFILE = "";
@@ -2668,7 +2676,7 @@
 				);
 				INFOPLIST_FILE = "../../applications/osmo4_ios/osmo4ios-Info.plist";
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../extra_lib/lib/iOS\"",
@@ -2677,7 +2685,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-lstdc++";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.telecom-paristech.gpac";
 				PRODUCT_NAME = osmo4ios;
 				PROVISIONING_PROFILE = "";

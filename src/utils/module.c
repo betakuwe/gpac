@@ -154,6 +154,8 @@ static void load_all_modules(GF_ModuleManager *mgr)
 
 #if defined(GPAC_IPHONE) || defined(__DARWIN__) || defined(__APPLE__)
     LOAD_PLUGIN(vtb);
+    LOAD_PLUGIN(mpegh_iis_dec);
+
 #endif
 
 	//todo fix project for iOS
