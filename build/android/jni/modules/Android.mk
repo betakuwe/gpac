@@ -28,3 +28,5 @@ include $(LOCAL_PATH)/gm_widgetman.mk
 include $(LOCAL_PATH)/gm_osd.mk
 
 include $(LOCAL_PATH)/gm_mediacodec_dec.mk
+
+include $(LOCAL_PATH)/gm_mpegh_iis_dec.mk
