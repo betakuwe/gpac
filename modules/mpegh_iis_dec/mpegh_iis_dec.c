@@ -74,7 +74,8 @@ static GF_Err MPEGHIIS_AttachStream(GF_BaseDecoder *ifcg, GF_ESD *esd)
 		GF_LOG(GF_LOG_ERROR, GF_LOG_CODEC, ("[MPEGHIISDec] Error initializing decoder\n"));
 		return GF_IO_ERR;
 	}
-	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 2);
+//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 2);
+	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 12);
 //	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, -1);
 	
 	if (esd->decoderConfig->decoderSpecificInfo && esd->decoderConfig->decoderSpecificInfo->dataLength) {
