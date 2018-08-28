@@ -491,22 +491,26 @@ static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 	
 	bytes_written = gf_ar_fill_output(ptr, ar->tmp_buffer, tmp_buffer_size);
 	samples = bytes_written / s_size / nb_chan;
+	if (!samples) return 0;
 
-	for (i = 0; i<samples*nb_chan; i++) {
-		Float v;
-		if (s_size == 2) {
+	if (s_size == 2) {
+		for (i = 0; i<samples*nb_chan; i++) {
+			Float v;
 			v = (Float)( ((s16 *) ar->tmp_buffer) [i]);
 			v /= 32767.0f;
+			if (v < -1.0f) v = -1.0f;
+			else if (v > 1.0f) v = 1.0f;
+			ar->inputBuffer[i] = v;
 		}
-		else {
+	} else {
+		for (i = 0; i<samples*nb_chan; i++) {
+			Float v;
 			v = (Float)((s8 *)ar->tmp_buffer)[i];
 			v /= 127.0f;
+			if (v < -1.0f) v = -1.0f;
+			else if (v > 1.0f) v = 1.0f;
+			ar->inputBuffer[i] = v;
 		}
-		if (v < -1.0f)
-			v = -1.0f;
-		if (v > 1.0f)
-			v = 1.0f;
-		ar->inputBuffer[i] = v;
 	}
 
 	pitch = (int) (ar->pitch * 180 / GF_PI);
@@ -515,20 +519,23 @@ static u32 gf_ar_fill_output_Arkamys(void *ptr, char *buffer, u32 buffer_size)
 
 	ArkamysAudio360RenderingSetRotation(ar->audioFx, pitch, yaw, roll);
 	aerr = ArkamysAudio360RenderingProcess(ar->audioFx, ar->inputBuffer, ar->outputBuffer, samples);
-	if (aerr != ARKAMYS_NO_ERROR) return 0;
-	
-	for (i = 0; i<samples * 2; i++) {
-		Float v = ar->outputBuffer[i];
-		if (s_size == 2) {
+	if (aerr != ARKAMYS_NO_ERROR)
+	 	return 0;
+
+	if (s_size == 2) {
+		for (i = 0; i<samples * 2; i++) {
+			Float v = ar->outputBuffer[i];
 			v = v * 32767.0f;
-			v = MAX(v, -32767.0f);
-			v = MIN(v, 32767.0f);
+			if (v < -32767.0f) v = -32767.0f;
+			else if (v > 32767.0f) v = 32767.0f;
 			((s16 *)buffer)[i] = (s16)v;
 		}
-		else {
+	} else {
+		for (i = 0; i<samples * 2; i++) {
+			Float v = ar->outputBuffer[i];
 			v = v * 127.0f;
-			v = MAX(v, -127.0f);
-			v = MIN(v, 127.0f);
+			if (v < -127.0f) v = -127.0f;
+			else if (v > 127.0f) v = 127.0f;
 			((s8 *)buffer)[i] = (s8)v;
 		}
 	}

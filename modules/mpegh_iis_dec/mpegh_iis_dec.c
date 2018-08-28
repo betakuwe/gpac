@@ -48,6 +48,7 @@ typedef struct
 	u16 ES_ID;
 	Bool signal_mc;
 	Bool is_sbr;
+	s32 target_output_fmt;
 
 	char ch_reorder[16];
 	GF_ESD *esd;
@@ -58,6 +59,7 @@ typedef struct
 
 static GF_Err MPEGHIIS_AttachStream(GF_BaseDecoder *ifcg, GF_ESD *esd)
 {
+	const char *opt;
 	MPEGHIISCTX();
 
 	if (ctx->ES_ID && ctx->ES_ID!=esd->ESID) return GF_NOT_SUPPORTED;
@@ -73,10 +75,14 @@ static GF_Err MPEGHIIS_AttachStream(GF_BaseDecoder *ifcg, GF_ESD *esd)
 		GF_LOG(GF_LOG_ERROR, GF_LOG_CODEC, ("[MPEGHIISDec] Error initializing decoder\n"));
 		return GF_IO_ERR;
 	}
-//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, -1);
-//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 2); //stereo
-//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 6); //5.1
-	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 12); //7.1
+	opt = gf_modules_get_option((GF_BaseInterface*)ifcg, "MPEGHIIS", "OutFmt");
+	if (!opt) ctx->target_output_fmt = 12; //7.1
+	else if (!strcmp(opt, "7.1")) ctx->target_output_fmt = 12; //7.1
+	else if (!strcmp(opt, "5.1")) ctx->target_output_fmt = 6; //5.1
+	else if (!strcmp(opt, "stereo")) ctx->target_output_fmt = 2; //stereo
+	else if (!strcmp(opt, "raw")) ctx->target_output_fmt = -1; //raw
+
+	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, ctx->target_output_fmt);
 
 	if (esd->decoderConfig->decoderSpecificInfo && esd->decoderConfig->decoderSpecificInfo->dataLength) {
 		//push config
@@ -292,6 +298,7 @@ GF_BaseDecoder *NewMPEGHIISDec()
 	ifce->ProcessData = MPEGHIIS_ProcessData;
 	ifce->CanHandleStream = MPEGHIIS_CanHandleStream;
 	ifce->GetName = MPEGHIIS_GetCodecName;
+	dec->target_output_fmt = 2;
 	return (GF_BaseDecoder *) ifce;
 }
 
