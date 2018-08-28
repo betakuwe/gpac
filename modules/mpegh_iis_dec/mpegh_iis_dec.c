@@ -59,10 +59,6 @@ typedef struct
 
 static GF_Err MPEGHIIS_AttachStream(GF_BaseDecoder *ifcg, GF_ESD *esd)
 {
-#ifndef GPAC_DISABLE_AV_PARSERS
-	GF_Err e;
-	GF_M4ADecSpecInfo a_cfg;
-#endif
 	MPEGHIISCTX();
 
 	if (ctx->ES_ID && ctx->ES_ID!=esd->ESID) return GF_NOT_SUPPORTED;
@@ -79,10 +75,11 @@ static GF_Err MPEGHIIS_AttachStream(GF_BaseDecoder *ifcg, GF_ESD *esd)
 		return GF_IO_ERR;
 	}
 	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, 2);
-
+//	aacDecoder_SetParam(ctx->codec, AAC_TARGET_LAYOUT_CICP, -1);
+	
 	if (esd->decoderConfig->decoderSpecificInfo && esd->decoderConfig->decoderSpecificInfo->dataLength) {
 		//push config
-	 	aacDecoder_ConfigRaw(ctx->codec, esd->decoderConfig->decoderSpecificInfo->data, esd->decoderConfig->decoderSpecificInfo->dataLength);
+	 	aacDecoder_ConfigRaw(ctx->codec, (UCHAR**)&esd->decoderConfig->decoderSpecificInfo->data, esd->decoderConfig->decoderSpecificInfo->dataLength);
 	}
 
 
@@ -106,7 +103,6 @@ static GF_Err MPEGHIIS_DetachStream(GF_BaseDecoder *ifcg, u16 ES_ID)
 }
 static GF_Err MPEGHIIS_GetCapabilities(GF_BaseDecoder *ifcg, GF_CodecCapability *capability)
 {
-	u32 i;
 	MPEGHIISCTX();
 	switch (capability->CapCode) {
 	/*not tested yet*/
@@ -161,9 +157,6 @@ static GF_Err MPEGHIIS_ProcessData(GF_MediaDecoder *ifcg,
                                char *outBuffer, u32 *outBufferLength,
                                u8 PaddingBits, u32 mmlevel)
 {
-	void *buffer;
-	unsigned short *conv_in, *conv_out;
-	u32 i, j;
 	CStreamInfo * p_si;
 	MPEGHIISCTX();
 
@@ -216,9 +209,13 @@ static GF_Err MPEGHIIS_ProcessData(GF_MediaDecoder *ifcg,
 				needs_reconfig = GF_TRUE;
 				ctx->sample_rate = p_si->sampleRate;
 			}
-			if (p_si->mpeghAUSize != ctx->num_samples) {
+			if (p_si->mpeghAUSize && (p_si->mpeghAUSize != ctx->num_samples)) {
 				needs_reconfig = GF_TRUE;
 				ctx->num_samples = p_si->mpeghAUSize;
+			}
+			else if (p_si->frameSize && (p_si->frameSize != ctx->num_samples)) {
+				needs_reconfig = GF_TRUE;
+				ctx->num_samples = p_si->frameSize;
 			}
 
 			if (needs_reconfig) {
