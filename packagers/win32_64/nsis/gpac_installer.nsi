@@ -491,6 +491,12 @@ Section "DekTec output" SecDecTek
   File "${GPAC_BIN}\gm_dektec_out.dll"
 SectionEnd
 
+Section "MPEG-H IIS Decoder" SecMPEGHIIS
+  SectionIn 1
+  File "${GPAC_BIN}\gm_mpegh_iis_dec.dll"
+SectionEnd
+
+
 SubSectionEnd
 
 
@@ -624,11 +630,12 @@ SubSectionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMPEGU} "Support for W3C and MPEG-U Widgets"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMobIP} "UNIGE Mobile IP Framework"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDecTek} "DekTek 3G SDI output support"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecMPEGHIIS} "MPEG-H Audio decoder by Fraunhofer IIS"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecRAW} "RAW audio-video output support"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecOffisComp} "OFFIS Audio Compressor"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMP4B} "MP4Box command-line tool for various multimedia operations"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMP42TS} "MP42TS command-line tool for MPEG-2 TS multiplexing"
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecDC} "DashCast offline and live MPEG-DASH Encoder"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecDC} "DashCast offline and live MPEG-DASH Encoder"  
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSDK} "GPAC SDK: headers and library files needed to develop modules for GPAC or appllication based on GPAC"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecZILLA} "GPAC playback support NPAPI-based browsers (FireFox/Gecko, Safari/WebKit)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecGPAX} "GPAC playback support using ActiveX component (Internet Explorer)"
