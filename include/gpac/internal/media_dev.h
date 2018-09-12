@@ -494,16 +494,26 @@ GF_Err gf_hevc_get_sps_info_with_state(HEVCState *hevc_state, char *sps_data, u3
 
 #define MAX_TILE_ROWS 64
 #define MAX_TILE_COLS 64
+
+typedef enum {
+	AV1_KEY_FRAME = 0,
+	AV1_INTER_FRAME = 1,
+	AV1_INTRA_ONLY_FRAME = 2,
+	AV1_SWITCH_FRAME = 3,
+} AV1FrameType;
+
 typedef struct
 {
 	Bool seen_frame_header, seen_seq_header;
 	Bool key_frame, show_frame;
+	AV1FrameType frame_type;
 	GF_List *header_obus, *frame_obus; /*GF_AV1_OBUArrayEntry*/
 	struct {
-		u64 bs_start;
+		//offset in bytes after first byte of obu, including its header
+		u32 obu_start_offset;
 		u32 size;
 	} tiles[MAX_TILE_ROWS*MAX_TILE_COLS];
-	u32 tile_idx;
+	u32 nb_tiles_in_obu;
 } AV1StateFrame;
 
 typedef struct
@@ -539,6 +549,11 @@ typedef struct
 	Bool color_description_present_flag;
 	u8 color_primaries, transfer_characteristics, matrix_coefficients;
 	Bool color_range;
+
+	//reset at each obu
+	Bool obu_has_size_field, obu_extension_flag;
+	u8 temporal_id, spatial_id;
+
 } AV1State;
 
 GF_Err aom_av1_parse_temporal_unit_from_section5(GF_BitStream *bs, AV1State *state);

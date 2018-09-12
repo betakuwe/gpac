@@ -2104,13 +2104,6 @@ GF_Err aom_av1_parse_temporal_unit_from_ivf(GF_BitStream *bs, AV1State *state)
 	return e;
 }
 
-typedef enum {
-	AV1_KEY_FRAME = 0,
-	AV1_INTER_FRAME = 1,
-	AV1_INTRA_ONLY_FRAME = 2,
-	AV1_SWITCH_FRAME = 3,
-} AV1FrameType;
-
 #define AV1_NUM_REF_FRAMES 8
 #define AV1_ALL_FRAMES ((1 << AV1_NUM_REF_FRAMES) - 1)
 
@@ -2275,7 +2268,7 @@ static void frame_size(GF_BitStream *bs, AV1State *state, Bool frame_size_overri
 		state->height = frame_height_minus_1 + 1;
 	}
 	superres_params(bs, state);
-	//compute_image_size();
+	//compute_image_size(); //no bits
 }
 
 static void render_size(GF_BitStream *bs)
@@ -2334,7 +2327,6 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 	u8 refresh_frame_flags = 0;
 	u8 primary_ref_frame;
 	u16 idLen = 0;
-	AV1FrameType frame_type;
 	AV1StateFrame *frame_state = &state->frame_state;
 
 	assert(bs && state && show_existing_frame);
@@ -2346,7 +2338,7 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 	if (state->reduced_still_picture_header) {
 		frame_state->key_frame = GF_TRUE;
 		FrameIsIntra = GF_TRUE;
-		frame_type = AV1_KEY_FRAME;
+		frame_state->frame_type = AV1_KEY_FRAME;
 		frame_state->show_frame = GF_TRUE;
 	} else {
 		*show_existing_frame = gf_bs_read_int(bs, 1);
@@ -2368,10 +2360,10 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 			}*/
 			return;
 		}
-		frame_type = gf_bs_read_int(bs, 2);
-		FrameIsIntra = (frame_type == AV1_INTRA_ONLY_FRAME || frame_type == AV1_KEY_FRAME);
+		frame_state->frame_type = gf_bs_read_int(bs, 2);
+		FrameIsIntra = (frame_state->frame_type == AV1_INTRA_ONLY_FRAME || frame_state->frame_type == AV1_KEY_FRAME);
 		frame_state->show_frame = gf_bs_read_int(bs, 1);
-		frame_state->key_frame = frame_state->seen_seq_header && frame_state->show_frame && frame_type == AV1_KEY_FRAME && frame_state->seen_frame_header;
+		frame_state->key_frame = frame_state->seen_seq_header && frame_state->show_frame && frame_state->frame_type == AV1_KEY_FRAME && frame_state->seen_frame_header;
 		if (frame_state->show_frame && state->decoder_model_info_present_flag && !state->equal_picture_interval) {
 			GF_LOG(GF_LOG_WARNING, GF_LOG_CODING, ("[AV1] temporal_point_info() not implemented (1)\n"));
 			assert(0);
@@ -2380,7 +2372,7 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 		if (!frame_state->show_frame) {
 			/*showable_frame = */gf_bs_read_int(bs, 1);
 		}
-		if (frame_type == AV1_SWITCH_FRAME || (frame_type == AV1_KEY_FRAME && frame_state->show_frame))
+		if (frame_state->frame_type == AV1_SWITCH_FRAME || (frame_state->frame_type == AV1_KEY_FRAME && frame_state->show_frame))
 			error_resilient_mode = GF_TRUE;
 		else
 			error_resilient_mode = gf_bs_read_int(bs, 1);
@@ -2407,7 +2399,7 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 	if (state->frame_id_numbers_present_flag) {
 		/*current_frame_id = */gf_bs_read_int(bs, idLen);
 	}
-	if (frame_type == AV1_SWITCH_FRAME)
+	if (frame_state->frame_type == AV1_SWITCH_FRAME)
 		frame_size_override_flag =  GF_TRUE;
 	else if (state->reduced_still_picture_header)
 		frame_size_override_flag = GF_FALSE;
@@ -2443,7 +2435,7 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 #endif
 	}
 
-	if (frame_type == AV1_SWITCH_FRAME || (frame_type == AV1_KEY_FRAME && frame_state->show_frame)) {
+	if (frame_state->frame_type == AV1_SWITCH_FRAME || (frame_state->frame_type == AV1_KEY_FRAME && frame_state->show_frame)) {
 		refresh_frame_flags  = AV1_ALL_FRAMES;
 	} else {
 		refresh_frame_flags = gf_bs_read_int(bs, 8);
@@ -2457,14 +2449,14 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 		}
 	}
 
-	if (frame_type == AV1_KEY_FRAME) {
+	if (frame_state->frame_type == AV1_KEY_FRAME) {
 		frame_size(bs, state, frame_size_override_flag);
 		render_size(bs);
 		if (allow_screen_content_tools && state->UpscaledWidth == state->width) {
 			/*allow_intrabc = */gf_bs_read_int(bs, 1);
 		}
 	} else {
-		if (frame_type == AV1_INTRA_ONLY_FRAME) {
+		if (frame_state->frame_type == AV1_INTRA_ONLY_FRAME) {
 			frame_size(bs, state, frame_size_override_flag);
 			render_size(bs);
 			if (allow_screen_content_tools && state->UpscaledWidth == state->width) {
@@ -2526,7 +2518,7 @@ static void av1_parse_uncompressed_header(GF_BitStream *bs, AV1State *state, Boo
 	//incomplete parsing
 }
 
-static void av1_parse_tile_group(GF_BitStream *bs, AV1State *state, u64 bs_end_of_obu_position)
+static void av1_parse_tile_group(GF_BitStream *bs, AV1State *state, u64 obu_start, u64 obu_size)
 {
 	u32 TileNum, tg_start=0, tg_end=0;
 	Bool numTiles = state->tileCols * state->tileRows;
@@ -2547,22 +2539,23 @@ static void av1_parse_tile_group(GF_BitStream *bs, AV1State *state, u64 bs_end_o
 
 	gf_bs_align(bs);
 
+	state->frame_state.nb_tiles_in_obu = 0;
 	for (TileNum = tg_start; TileNum <= tg_end; TileNum++) {
 		/*u32 tileRow = TileNum / state->tileCols;
 		u32 tileCol = TileNum % state->tileCols;*/
 		Bool lastTile = TileNum == tg_end;
 		u64 pos = gf_bs_get_position(bs);
 		if (lastTile) {
-			state->frame_state.tiles[state->frame_state.tile_idx].bs_start = pos;
-			state->frame_state.tiles[state->frame_state.tile_idx].size = (u32)(bs_end_of_obu_position - pos);
+			state->frame_state.tiles[state->frame_state.nb_tiles_in_obu].obu_start_offset = (u32) (pos - obu_start);
+			state->frame_state.tiles[state->frame_state.nb_tiles_in_obu].size = (u32)(obu_size - (pos - obu_start) );
 		} else {
 			u64 tile_size_minus_1 = aom_av1_le(bs, state->tile_size_bytes);
 			pos = gf_bs_get_position(bs);
-			state->frame_state.tiles[state->frame_state.tile_idx].bs_start = pos;
-			state->frame_state.tiles[state->frame_state.tile_idx].size = (u32)(tile_size_minus_1 + 1/* + state->tile_size_bytes*/);
+			state->frame_state.tiles[state->frame_state.nb_tiles_in_obu].obu_start_offset = (u32) (pos - obu_start);
+			state->frame_state.tiles[state->frame_state.nb_tiles_in_obu].size = (u32)(tile_size_minus_1 + 1/* + state->tile_size_bytes*/);
 		}
-		gf_bs_seek(bs, pos + state->frame_state.tiles[state->frame_state.tile_idx].size);
-		state->frame_state.tile_idx++;
+		gf_bs_seek(bs, pos + state->frame_state.tiles[state->frame_state.nb_tiles_in_obu].size);
+		state->frame_state.nb_tiles_in_obu++;
 	}
 }
 
@@ -2585,34 +2578,37 @@ static void av1_parse_frame_header(GF_BitStream *bs, AV1State *state)
 	}
 }
 
-static void av1_parse_frame(GF_BitStream *bs, AV1State *state) {
-	/*u64 startBitPos = */gf_bs_get_position(bs);
+static void av1_parse_frame(GF_BitStream *bs, AV1State *state, u64 obu_start, u64 obu_size)
+{
 	av1_parse_frame_header(bs, state);
-	//TODO: av1_parse_frame_header() parsing is incomplete: av1_parse_tile_group(bs, state);
+	//byte alignment
+	gf_bs_align(bs);
+	av1_parse_tile_group(bs, state, obu_start, obu_size);
 }
 
+GF_EXPORT
 GF_Err gf_media_aom_av1_parse_obu(GF_BitStream *bs, ObuType *obu_type, u64 *obu_size, u32 *obu_hdr_size, AV1State *state)
 {
 	GF_Err e = GF_OK;
-	Bool obu_has_size_field = GF_FALSE, obu_extension_flag = GF_FALSE;
-	u8 temporal_id = 0, spatial_id = 0;
 	u32 hdr_size;
 	u64 pos = gf_bs_get_position(bs);
 
 	if (!bs || !obu_type || !state)
 		return GF_BAD_PARAM;
 
-	e = av1_parse_obu_header(bs, obu_type, &obu_extension_flag, &obu_has_size_field, &temporal_id, &spatial_id);
+	state->obu_extension_flag = state->obu_has_size_field = 0;
+	state->temporal_id = state->spatial_id = 0;
+	e = av1_parse_obu_header(bs, obu_type, &state->obu_extension_flag, &state->obu_has_size_field, &state->temporal_id, &state->spatial_id);
 	if (e)
 		return e;
 
-	if (obu_has_size_field) {
+	if (state->obu_has_size_field) {
 		*obu_size = (u32)read_leb128(bs, NULL);
 	} else {
-		if (*obu_size >= 1 + obu_extension_flag) {
-			*obu_size = *obu_size - 1 - obu_extension_flag;
+		if (*obu_size >= 1 + state->obu_extension_flag) {
+			*obu_size = *obu_size - 1 - state->obu_extension_flag;
 		} else {
-			GF_LOG(GF_LOG_WARNING, GF_LOG_CODING, ("[AV1] computed OBU size "LLD" (input value = "LLU"). Skipping.\n", *obu_size - 1 - obu_extension_flag, *obu_size));
+			GF_LOG(GF_LOG_WARNING, GF_LOG_CODING, ("[AV1] computed OBU size "LLD" (input value = "LLU"). Skipping.\n", *obu_size - 1 - state->obu_extension_flag, *obu_size));
 			return GF_NON_COMPLIANT_BITSTREAM;
 		}
 	}
@@ -2621,10 +2617,10 @@ GF_Err gf_media_aom_av1_parse_obu(GF_BitStream *bs, ObuType *obu_type, u64 *obu_
 	if (obu_hdr_size) *obu_hdr_size = hdr_size;
 
 	if (*obu_type != OBU_SEQUENCE_HEADER && *obu_type != OBU_TEMPORAL_DELIMITER &&
-		state->OperatingPointIdc != 0 && obu_extension_flag == 1)
+		state->OperatingPointIdc != 0 && state->obu_extension_flag == 1)
 	{
-		u32 inTemporalLayer = (state->OperatingPointIdc >> temporal_id) & 1;
-		u32 inSpatialLayer = (state->OperatingPointIdc >> (spatial_id + 8)) & 1;
+		u32 inTemporalLayer = (state->OperatingPointIdc >> state->temporal_id) & 1;
+		u32 inSpatialLayer = (state->OperatingPointIdc >> (state->spatial_id + 8)) & 1;
 		if (!inTemporalLayer || !inSpatialLayer) {
 			*obu_type = -1;
 			gf_bs_seek(bs, pos + *obu_size);
@@ -2667,12 +2663,12 @@ GF_Err gf_media_aom_av1_parse_obu(GF_BitStream *bs, ObuType *obu_type, u64 *obu_
 		gf_bs_seek(bs, pos + *obu_size);
 		break;
 	case OBU_FRAME:
-		av1_parse_frame(bs, state);
+		av1_parse_frame(bs, state, pos, *obu_size);
 		assert(gf_bs_get_position(bs) <= pos + *obu_size);
 		gf_bs_seek(bs, pos + *obu_size);
 		break;
 	case OBU_TILE_GROUP:
-		av1_parse_tile_group(bs, state, pos + *obu_size);
+		av1_parse_tile_group(bs, state, pos, *obu_size);
 		assert(gf_bs_get_position(bs) <= pos + *obu_size);
 		gf_bs_seek(bs, pos + *obu_size);
 		break;
