@@ -1285,6 +1285,7 @@ static GF_Err gf_media_isom_segment_file(GF_ISOFile *input, const char *output_f
 		gf_isom_modify_alternate_brand(output, GF_ISOM_BRAND_MP41, 0);
 		gf_isom_modify_alternate_brand(output, GF_ISOM_BRAND_MP42, 0);
 
+		gf_isom_remove_root_od(output);
 	}
 
 	MaxFragmentDuration = (u32) (dasher->dash_scale * dasher->fragment_duration);
