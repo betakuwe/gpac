@@ -894,7 +894,7 @@ GF_Err gf_import_aac_loas(GF_MediaImporter *import)
 	if (!import->esd->ESID) import->esd->ESID = gf_isom_get_track_id(import->dest, track);
 	import->final_trackID = import->esd->ESID;
 	gf_isom_new_mpeg4_description(import->dest, track, import->esd, (import->flags & GF_IMPORT_USE_DATAREF) ? import->in_name : NULL, NULL, &di);
-	gf_isom_set_audio_info(import->dest, track, di, timescale, (acfg.nb_chan>2) ? 2 : acfg.nb_chan, 16);
+	gf_isom_set_audio_info(import->dest, track, di, timescale, acfg.nb_chan, 16);
 
 	/*add first sample*/
 	samp = gf_isom_sample_new();
@@ -1138,7 +1138,7 @@ GF_Err gf_import_aac_adts(GF_MediaImporter *import)
 	if (!import->esd->ESID) import->esd->ESID = gf_isom_get_track_id(import->dest, track);
 	import->final_trackID = import->esd->ESID;
 	gf_isom_new_mpeg4_description(import->dest, track, import->esd, (import->flags & GF_IMPORT_USE_DATAREF) ? import->in_name : NULL, NULL, &di);
-	gf_isom_set_audio_info(import->dest, track, di, timescale, (hdr.nb_ch>2) ? 2 : hdr.nb_ch, 16);
+	gf_isom_set_audio_info(import->dest, track, di, timescale, hdr.nb_ch, 16);
 
 	/*add first sample*/
 	samp = gf_isom_sample_new();
@@ -4094,6 +4094,7 @@ GF_Err gf_import_amr_evrc_smv(GF_MediaImporter *import)
 
 	memset(&gpp_cfg, 0, sizeof(GF_3GPConfig));
 	gpp_cfg.type = mtype;
+	gpp_cfg.vendor = GF_VENDOR_GPAC;
 	gpp_cfg.frames_per_sample = import->frames_per_sample;
 	if (!gpp_cfg.frames_per_sample) gpp_cfg.frames_per_sample  = 1;
 	else if (gpp_cfg.frames_per_sample >15) gpp_cfg.frames_per_sample = 15;
@@ -4113,7 +4114,6 @@ GF_Err gf_import_amr_evrc_smv(GF_MediaImporter *import)
 		if (e) goto exit;
 	} else {
 		import->flags &= ~GF_IMPORT_FORCE_MPEG4;
-		gpp_cfg.vendor = GF_VENDOR_GPAC;
 		e = gf_isom_3gp_config_new(import->dest, track, &gpp_cfg, (import->flags & GF_IMPORT_USE_DATAREF) ? import->in_name : NULL, NULL, &di);
 		if (e) goto exit;
 	}
@@ -4142,14 +4142,16 @@ GF_Err gf_import_amr_evrc_smv(GF_MediaImporter *import)
 		case GF_ISOM_SUBTYPE_3GP_AMR:
 		case GF_ISOM_SUBTYPE_3GP_AMR_WB:
 			ft = (toc >> 3) & 0x0F;
-			/*update mode set (same mechanism for both AMR and AMR-WB*/
-			gpp_cfg.AMR_mode_set |= (1<<ft);
 			if (gpp_cfg.type==GF_ISOM_SUBTYPE_3GP_AMR_WB) {
 				samp->dataLength = (u32)GF_AMR_WB_FRAME_SIZE[ft];
 			} else {
 				samp->dataLength = (u32)GF_AMR_FRAME_SIZE[ft];
 			}
 			samp->data[0] = toc;
+			if (samp->dataLength) {
+				/*update mode set (same mechanism for both AMR and AMR-WB*/
+				gpp_cfg.AMR_mode_set |= (1<<ft);
+			}
 			break;
 		case GF_ISOM_SUBTYPE_3GP_EVRC:
 		case GF_ISOM_SUBTYPE_3GP_SMV:
@@ -4246,6 +4248,7 @@ GF_Err gf_import_qcp(GF_MediaImporter *import)
 	}
 
 	memset(&gpp_cfg, 0, sizeof(GF_3GPConfig));
+	gpp_cfg.vendor = GF_VENDOR_GPAC;
 	delete_esd = GF_FALSE;
 
 	mdia = gf_fopen(import->in_name, "rb");
