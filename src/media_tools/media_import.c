@@ -7098,11 +7098,46 @@ void av1_reset_frame_state(AV1StateFrame *frame_state) {
 	memset(frame_state, 0, sizeof(AV1StateFrame));
 }
 
+static Bool probe_webm_matrovska(GF_BitStream *bs)
+{
+	char probe[64], *found = NULL;
+	u64 pos = gf_bs_get_position(bs);
+	u32 read = gf_bs_read_data(bs, probe, sizeof(probe) - 1);
+	gf_bs_seek(bs, pos);
+	probe[read] = 0;
+	found = strstr(probe, "webm");
+	if (found) {
+		GF_LOG(GF_LOG_WARNING, GF_LOG_CONTAINER, ("AV1: guessed unsupported WebM container. Aborting.\n"));
+		return GF_TRUE;
+	}
+	found = strstr(probe, "matroska");
+	if (found) {
+		GF_LOG(GF_LOG_WARNING, GF_LOG_CONTAINER, ("AV1: guessed unsupported Matrovska container. Aborting.\n"));
+		return GF_TRUE;
+	}
+
+	return GF_FALSE;
+}
+
+static const char* av1_get_bs_syntax_name(GF_Err(*av1_bs_syntax)(GF_BitStream*, AV1State*))
+{
+	if (av1_bs_syntax == aom_av1_parse_temporal_unit_from_section5) {
+		return "OBU section 5";
+	} else if (av1_bs_syntax == aom_av1_parse_temporal_unit_from_annexb) {
+		return "AnnexB";
+	} else if (av1_bs_syntax == aom_av1_parse_temporal_unit_from_ivf) {
+		return "IVF";
+	} else {
+		assert(0);
+		return "Unknown";
+	}
+}
+
 static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 {
 #ifdef GPAC_DISABLE_AV1
 	return GF_NOT_SUPPORTED;
-#endif
+#else
 	GF_Err e = GF_OK;
 	GF_AV1Config *av1_cfg = NULL;
 	AV1State state;
@@ -7112,12 +7147,7 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 	Bool detect_fps;
 	Double FPS = 0.0;
 	u64 fsize, pos = 0;
-	typedef enum {
-		OBUs,   /*Section 5*/
-		AnnexB,
-		IVF
-	} AV1BitstreamSyntax;
-	AV1BitstreamSyntax av1_bs_syntax;
+	GF_Err (*parse_temporal_unit)(GF_BitStream*, AV1State*) = NULL;
 
 	if (import->flags & GF_IMPORT_PROBE_ONLY) {
 		import->nb_tracks = 1;
@@ -7134,7 +7164,7 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 		state.keep_temporal_delim = GF_TRUE;
 
 	mdia = gf_fopen(import->in_name, "rb");
-	if (!mdia) return gf_import_message(import, GF_URL_ERROR, "Cannot find file %s", import->in_name);
+	if (!mdia) return gf_import_message(import, GF_URL_ERROR, "AV1: cannot find file %s", import->in_name);
 
 	detect_fps = GF_TRUE;
 	FPS = (Double)import->video_fps;
@@ -7152,14 +7182,17 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 
 	bs = gf_bs_from_file(mdia, GF_BITSTREAM_READ);
 
+	if (probe_webm_matrovska(bs))
+		goto exit;
+
 	if (import->streamFormat) {
 		gf_import_message(import, GF_OK, "AV1: forcing format \"%s\".", import->streamFormat);
 		if (!stricmp(import->streamFormat, "obu")) {
-			av1_bs_syntax = OBUs;
+			parse_temporal_unit = aom_av1_parse_temporal_unit_from_section5;
 		} else if (!stricmp(import->streamFormat, "annexB")) {
-			av1_bs_syntax = AnnexB;
+			parse_temporal_unit = aom_av1_parse_temporal_unit_from_annexb;
 		} else if (!stricmp(import->streamFormat, "ivf")) {
-			av1_bs_syntax = IVF;
+			parse_temporal_unit = aom_av1_parse_temporal_unit_from_ivf;
 		} else {
 			gf_import_message(import, GF_NOT_SUPPORTED, "AV1: unknown bitstream format \"%s\" found. Only \"obu\", \"annexB\" and \"ivf\" found.", import->streamFormat);
 			goto exit;
@@ -7167,7 +7200,7 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 	} else {
 		if (gf_media_probe_ivf(bs)) {
 			e = gf_media_aom_parse_ivf_file_header(bs, &state);
-			av1_bs_syntax = IVF;
+			parse_temporal_unit = aom_av1_parse_temporal_unit_from_ivf;
 
 			if (detect_fps && (state.FPS != FPS)) {
 				import->video_fps = FPS = state.FPS;
@@ -7175,8 +7208,7 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 			}
 			pos = gf_bs_get_position(bs);
 		} else if (gf_media_aom_probe_annexb(bs)) {
-			aom_av1_parse_temporal_unit_from_annexb(bs, &state);
-			av1_bs_syntax = AnnexB;
+			parse_temporal_unit = aom_av1_parse_temporal_unit_from_annexb;
 		} else {
 			gf_bs_seek(bs, pos);
 			e = aom_av1_parse_temporal_unit_from_section5(bs, &state);
@@ -7184,9 +7216,10 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 				gf_import_message(import, GF_NOT_SUPPORTED, "AV1: couldn't guess bitstream format (IVF then Annex B then Section 5 tested).");
 				goto exit;
 			}
-			av1_bs_syntax = OBUs;
+			parse_temporal_unit = aom_av1_parse_temporal_unit_from_section5;
 		}
 	}
+	gf_bs_seek(bs, pos);
 
 	track_id = 0;
 	if (import->esd) track_id = import->esd->ESID;
@@ -7203,40 +7236,14 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 	}
 
 	fsize = gf_bs_get_size(bs) / 1000;
-	gf_bs_seek(bs, pos);
-	if (av1_bs_syntax == OBUs) {
-		ObuType obu_type;
-		u64 obu_size;
-		GF_Err e = gf_media_aom_av1_parse_obu(bs, &obu_type, &obu_size, NULL, &state);
-		if (e) {
-			gf_import_message(import, GF_OK, "Error parsing OBU (Section 5)");
-			goto exit;
-		}
-		if (obu_type != OBU_TEMPORAL_DELIMITER) {
-			gf_import_message(import, GF_OK, "Error OBU stream does not start with a temporal delimiter");
-			goto exit;
-		}
-	}
 	while (gf_bs_available(bs)) {
 		av1_reset_frame_state(&state.frame_state);
 		pos = gf_bs_get_position(bs);
 
 		/*we process each TU and extract only the necessary OBUs*/
-		if (av1_bs_syntax == OBUs) {
-			if (aom_av1_parse_temporal_unit_from_section5(bs, &state) != GF_OK) {
-				gf_import_message(import, GF_OK, "Error parsing OBU (Section 5)");
-				goto exit;
-			}
-		} else if (av1_bs_syntax == AnnexB) {
-			if (aom_av1_parse_temporal_unit_from_annexb(bs, &state) != GF_OK) {
-				gf_import_message(import, GF_OK, "Error parsing OBU (Annex B)");
-				goto exit;
-			}
-		} else if (av1_bs_syntax == IVF) {
-			if (aom_av1_parse_temporal_unit_from_ivf(bs, &state) != GF_OK) {
-				gf_import_message(import, GF_OK, "Error parsing OBU (IVF)");
-				goto exit;
-			}
+		if (parse_temporal_unit(bs, &state) != GF_OK) {
+			gf_import_message(import, GF_NON_COMPLIANT_BITSTREAM, "Error parsing %s", av1_get_bs_syntax_name(parse_temporal_unit));
+			goto exit;
 		}
 
 		/*add sample*/
@@ -7273,7 +7280,7 @@ static GF_Err gf_import_aom_av1(GF_MediaImporter *import)
 				e = gf_isom_av1_config_new(import->dest, track_num, av1_cfg, NULL, NULL, &di);
 				if (e) goto exit;
 
-				gf_import_message(import, GF_OK, "Importing AV1 from %s file - size %dx%d bit-depth %d FPS %d/%d", (av1_bs_syntax == OBUs) ? "OBU section 5" : (av1_bs_syntax == AnnexB) ? "AnnexB" : "IVF", state.width, state.height, state.bit_depth, timescale, dts_inc);
+				gf_import_message(import, GF_OK, "Importing AV1 from %s file - size %dx%d bit-depth %d FPS %d/%d", av1_get_bs_syntax_name(parse_temporal_unit), state.width, state.height, state.bit_depth, timescale, dts_inc);
 
 			} else {
 				/*safety check: we only support static metadata*/
@@ -7338,6 +7345,180 @@ exit:
 	gf_bs_del(bs);
 	gf_fclose(mdia);
 	return e;
+#endif /*GPAC_DISABLE_AV1*/
+}
+
+
+static GF_Err gf_import_vp9(GF_MediaImporter *import)
+{
+#ifdef GPAC_DISABLE_VP9
+	return GF_NOT_SUPPORTED;
+#else
+	GF_Err e = GF_OK;
+	GF_VPConfig *vp9_cfg = NULL;
+	FILE *mdia = NULL;
+	GF_BitStream *bs = NULL;
+	u32 timescale = 0, dts_inc = 0, track_num = 0, track_id = 0, di = 0, cur_samp = 0, codec_fourcc = 0, frame_rate = 0, time_scale = 0, num_frames = 0;
+	u16 width = 0, height = 0;
+	Bool detect_fps;
+	Double FPS = 0.0;
+	u64 pos = 0;
+
+	if (import->flags & GF_IMPORT_PROBE_ONLY) {
+		import->nb_tracks = 1;
+		import->tk_info[0].track_num = 1;
+		import->tk_info[0].type = GF_ISOM_MEDIA_VISUAL;
+		import->tk_info[0].flags = GF_IMPORT_OVERRIDE_FPS | GF_IMPORT_FORCE_PACKED;
+		return GF_OK;
+	}
+
+	vp9_cfg = gf_odf_vp_cfg_new();
+
+	mdia = gf_fopen(import->in_name, "rb");
+	if (!mdia) return gf_import_message(import, GF_URL_ERROR, "VP9: cannot find file %s", import->in_name);
+	bs = gf_bs_from_file(mdia, GF_BITSTREAM_READ);
+
+	if (probe_webm_matrovska(bs))
+		goto exit;
+
+	e = gf_media_parse_ivf_file_header(bs, &width, &height, &codec_fourcc, &frame_rate, &time_scale, &num_frames);
+	if (e)
+		goto exit;
+
+	detect_fps = GF_TRUE;
+	FPS = (Double)import->video_fps;
+	if (!FPS || import->video_fps == GF_IMPORT_AUTO_FPS) {
+		FPS = (double)frame_rate / time_scale;
+	} else {
+		/*fps is forced by the caller*/
+		detect_fps = GF_FALSE;
+	}
+	get_video_timing(FPS, &timescale, &dts_inc);
+
+	track_id = 0;
+	if (import->esd) track_id = import->esd->ESID;
+	track_num = gf_isom_new_track(import->dest, track_id, GF_ISOM_MEDIA_VISUAL, timescale);
+	if (!track_num) {
+		e = gf_isom_last_error(import->dest);
+		goto exit;
+	}
+	gf_isom_set_track_enabled(import->dest, track_num, 1);
+	if (import->esd && !import->esd->ESID) import->esd->ESID = gf_isom_get_track_id(import->dest, track_num);
+	import->final_trackID = gf_isom_get_track_id(import->dest, track_num);
+	if (import->esd && import->esd->dependsOnESID) {
+		gf_isom_set_track_reference(import->dest, track_num, GF_ISOM_REF_DECODE, import->esd->dependsOnESID);
+	}
+
+	while (gf_bs_available(bs)) {
+		Bool key_frame = GF_FALSE;
+		u64 frame_size = 0;
+		int num_frames_in_superframe = 0;
+		u32 frame_sizes[VP9_MAX_FRAMES_IN_SUPERFRAME];
+
+		GF_Err e = gf_media_parse_ivf_frame_header(bs, &frame_size);
+		if (e) goto exit;
+
+		pos = gf_bs_get_position(bs);
+		if (gf_bs_available(bs) < frame_size) {
+			gf_import_message(import, GF_NON_COMPLIANT_BITSTREAM, "VP9 IVF frame size is %u but there is only "LLU" bytes left.", frame_size, gf_bs_available(bs));
+			goto exit;
+		}
+
+		/*check if it is a superframe*/
+		if (vp9_parse_superframe(bs, frame_size, &num_frames_in_superframe, frame_sizes) != GF_OK) {
+			gf_import_message(import, GF_NON_COMPLIANT_BITSTREAM, "Error parsing VP9 sample");
+			goto exit;
+		}
+
+		if (vp9_parse_sample(bs, &key_frame, vp9_cfg) != GF_OK) {
+			gf_import_message(import, GF_NON_COMPLIANT_BITSTREAM, "Error parsing VP9 sample");
+			goto exit;
+		}
+		gf_bs_seek(bs, pos + frame_size);
+
+		/*add sample*/
+		{
+			u32 i = 0;
+			GF_ISOSample *samp = gf_isom_sample_new();
+			samp->DTS = (u64)dts_inc*cur_samp;
+			samp->IsRAP = key_frame ? SAP_TYPE_1 : 0;
+			samp->CTS_Offset = 0;
+			samp->dataLength = (u32)(gf_bs_get_position(bs) - pos);
+			assert(samp->dataLength == frame_size);
+			samp->data = gf_malloc(samp->dataLength);
+			gf_bs_seek(bs, pos);
+			gf_bs_read_data(bs, samp->data, samp->dataLength);
+
+			if (cur_samp == 0) {
+				e = gf_isom_vp_config_new(import->dest, track_num, vp9_cfg, NULL, NULL, &di, GF_TRUE);
+				if (e) goto exit;
+			}
+
+			e = gf_isom_add_sample(import->dest, track_num, di, samp);
+			if (e) goto exit;
+
+			gf_isom_sample_del(&samp);
+
+			gf_set_progress("Importing VP9", cur_samp, num_frames);
+			cur_samp++;
+		}
+	}
+
+	gf_set_progress("Importing VP9", num_frames, num_frames);
+	e = gf_isom_set_visual_info(import->dest, track_num, di, width, height);
+	if (e) goto exit;
+	e = gf_media_update_par(import->dest, track_num);
+	if (e) goto exit;
+
+	gf_media_update_bitrate(import->dest, track_num);
+
+	/*rewrite ESD*/
+	if (import->esd) {
+		if (!import->esd->slConfig) import->esd->slConfig = (GF_SLConfig*)gf_odf_desc_new(GF_ODF_SLC_TAG);
+		import->esd->slConfig->predefined = 2;
+		import->esd->slConfig->timestampResolution = timescale;
+		if (import->esd->decoderConfig) gf_odf_desc_del((GF_Descriptor *)import->esd->decoderConfig);
+		import->esd->decoderConfig = gf_isom_get_decoder_config(import->dest, track_num, 1);
+		gf_isom_change_mpeg4_description(import->dest, track_num, 1, import->esd);
+	}
+
+exit:
+	gf_odf_vp_cfg_del(vp9_cfg);
+	gf_bs_del(bs);
+	gf_fclose(mdia);
+	return e;
+#endif /*GPAC_DISABLE_VP9*/
+}
+
+static GF_Err gf_import_ivf(GF_MediaImporter *import)
+{
+	GF_Err e = GF_OK;
+	u16 width = 0, height = 0;
+	u32 codec_fourcc = 0, frame_rate = 0, time_scale = 0, num_frames = 0;
+	FILE *mdia = NULL;
+	GF_BitStream *bs = NULL;
+
+	mdia = gf_fopen(import->in_name, "rb");
+	if (!mdia) return gf_import_message(import, GF_URL_ERROR, "Cannot find file %s", import->in_name);
+	bs = gf_bs_from_file(mdia, GF_BITSTREAM_READ);
+
+	e = gf_media_parse_ivf_file_header(bs, &width, &height, &codec_fourcc, &frame_rate, &time_scale, &num_frames);
+	fclose(mdia);
+	gf_bs_del(bs);
+	if (e)
+		return e;
+
+	switch (codec_fourcc) {
+	case GF_4CC('A', 'V', '0', '1'):
+		return gf_import_aom_av1(import);
+	case GF_4CC('V', 'P', '9', '0'):
+		return gf_import_vp9(import);
+	default: {
+		char *FourCC = (char*)&codec_fourcc;
+		GF_LOG(GF_LOG_ERROR, GF_LOG_CONTAINER, ("[IVF] Wrong codec FourCC. Only 'AV01' supported, got '%c%c%c%c'\n", FourCC[3], FourCC[2], FourCC[1], FourCC[0]));
+		return GF_NON_COMPLIANT_BITSTREAM;
+	}
+	}
 }
 
 #endif /*GPAC_DISABLE_AV_PARSERS*/
@@ -10244,8 +10425,11 @@ GF_Err gf_media_import(GF_MediaImporter *importer)
 		|| !strnicmp(ext, ".shvc", 5) || !strnicmp(ext, ".lhvc", 5) || !strnicmp(ext, ".mhvc", 5)
 	        || !stricmp(fmt, "HEVC") || !stricmp(fmt, "SHVC") || !stricmp(fmt, "MHVC") || !stricmp(fmt, "LHVC") || !stricmp(fmt, "H265") )
 		return gf_import_hevc(importer);
+	/*IVF container (may contain VP9, AV1, ...)*/
+	if (!strnicmp(ext, ".ivf", 4))
+		return gf_import_ivf(importer);
 	/*AOM AV1 video*/
-	if (!strnicmp(ext, ".av1", 4) || !strnicmp(ext, ".ivf", 4) || !strnicmp(ext, ".obu", 4))
+	if (!strnicmp(ext, ".av1", 4) || !strnicmp(ext, ".obu", 4))
 		return gf_import_aom_av1(importer);
 	/*AC3 and E-AC3*/
 	if (!strnicmp(ext, ".ac3", 4) || !stricmp(fmt, "AC3") )
