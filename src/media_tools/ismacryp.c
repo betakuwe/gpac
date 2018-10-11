@@ -485,7 +485,7 @@ GF_Err gf_ismacryp_decrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 {
 	GF_Err e;
 	Bool use_sel_enc;
-	u32 track, count, i, j, si, is_avc;
+	u32 track, count, i, j, si, otype, is_nalu;
 	GF_ISOSample *samp;
 	GF_ISMASample *ismasamp;
 	GF_Crypt *mc;
@@ -495,9 +495,9 @@ GF_Err gf_ismacryp_decrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 	GF_ESD *esd;
 
 	track = gf_isom_get_track_by_id(mp4, tci->trackID);
-	e = gf_isom_get_ismacryp_info(mp4, track, 1, &is_avc, NULL, NULL, NULL, NULL, &use_sel_enc, &IV_size, NULL);
+	e = gf_isom_get_ismacryp_info(mp4, track, 1, &otype, NULL, NULL, NULL, NULL, &use_sel_enc, &IV_size, NULL);
 	if (e) return e;
-	is_avc = (is_avc==GF_ISOM_BOX_TYPE_264B) ? 1 : 0;
+	is_nalu = ((otype==GF_ISOM_BOX_TYPE_264B) || (otype==GF_ISOM_BOX_TYPE_265B)) ? 1 : 0;
 
 
 	mc = gf_crypt_open(GF_AES_128, GF_CTR);
@@ -543,7 +543,7 @@ GF_Err gf_ismacryp_decrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 		gf_isom_ismacryp_delete_sample(ismasamp);
 
 		/*replace AVC start codes (0x00000001) by nalu size*/
-		if (is_avc) {
+		if (is_nalu) {
 			u32 nalu_size;
 			u32 remain = samp->dataLength;
 			char *start, *end;
@@ -638,7 +638,7 @@ GF_Err gf_ismacryp_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 	GF_ISOSample *samp;
 	GF_ISMASample *isamp;
 	GF_Crypt *mc;
-	u32 i, count, di, track, IV_size, rand, avc_size_length;
+	u32 i, count, di, track, IV_size, rand, avc_size_length, hevc_size_length;
 	u64 BSO, range_end;
 	GF_ESD *esd;
 	GF_IPMPPtr *ipmpdp;
@@ -650,7 +650,7 @@ GF_Err gf_ismacryp_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 	GF_Err e;
 	Bool prev_sample_encryped, has_crypted_samp;
 
-	avc_size_length = 0;
+	avc_size_length = hevc_size_length = 0;
 	track = gf_isom_get_track_by_id(mp4, tci->trackID);
 	if (!track) {
 		GF_LOG(GF_LOG_ERROR, GF_LOG_AUTHOR, ("[CENC/ISMA] Cannot find TrackID %d in input file - skipping\n", tci->trackID));
@@ -664,6 +664,7 @@ GF_Err gf_ismacryp_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 	}
 	if (esd) {
 		if ((esd->decoderConfig->objectTypeIndication==GPAC_OTI_VIDEO_AVC) || (esd->decoderConfig->objectTypeIndication==GPAC_OTI_VIDEO_SVC)) avc_size_length = 1;
+		else if ((esd->decoderConfig->objectTypeIndication==GPAC_OTI_VIDEO_HEVC) || (esd->decoderConfig->objectTypeIndication==GPAC_OTI_VIDEO_LHVC)) hevc_size_length = 1;
 		gf_odf_desc_del((GF_Descriptor*) esd);
 	}
 	if (avc_size_length) {
@@ -671,7 +672,16 @@ GF_Err gf_ismacryp_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 		avc_size_length = avccfg->nal_unit_size;
 		gf_odf_avc_cfg_del(avccfg);
 		if (avc_size_length != 4) {
-			GF_LOG(GF_LOG_ERROR, GF_LOG_AUTHOR, ("[CENC/ISMA] Cannot encrypt AVC/H264 track with %d size_length field - onmy 4 supported\n", avc_size_length));
+			GF_LOG(GF_LOG_ERROR, GF_LOG_AUTHOR, ("[CENC/ISMA] Cannot encrypt AVC/H264 track with %d size_length field - only 4 supported\n", avc_size_length));
+			return GF_NOT_SUPPORTED;
+		}
+	}
+	if (hevc_size_length) {
+		GF_HEVCConfig *hvccfg = gf_isom_hevc_config_get(mp4, track, 1);
+		avc_size_length = hvccfg->nal_unit_size;
+		gf_odf_hevc_cfg_del(hvccfg);
+		if (avc_size_length != 4) {
+			GF_LOG(GF_LOG_ERROR, GF_LOG_AUTHOR, ("[CENC/ISMA] Cannot encrypt HEVC/H265 track with %d size_length field - only 4 supported\n", avc_size_length));
 			return GF_NOT_SUPPORTED;
 		}
 	}
@@ -765,6 +775,8 @@ GF_Err gf_ismacryp_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (
 
 		switch (tci->sel_enc_type) {
 		case GF_CRYPT_SELENC_RAP:
+			if (!samp->IsRAP)
+				gf_isom_get_sample_rap_roll_info(mp4, track, i+1, (Bool *) &samp->IsRAP, NULL, NULL);
 			if (samp->IsRAP) isamp->flags |= GF_ISOM_ISMA_IS_ENCRYPTED;
 			break;
 		case GF_CRYPT_SELENC_NON_RAP:
@@ -1144,7 +1156,8 @@ static GF_Err gf_cenc_encrypt_sample_ctr(GF_Crypt *mc, GF_TrackCryptInfo *tci, G
 						clear_bytes = tci->av1.frame_state.tiles[0].obu_start_offset;
 						nalu_size = clear_bytes + tci->av1.frame_state.tiles[0].size;
 						//A subsample SHALL be created for each tile. this needs further clarification in the spec
-						prev_entry = NULL;
+						if (prev_entry && prev_entry->bytes_encrypted_data)
+							prev_entry = NULL;
 					}
 					break;
 				default:
@@ -1351,7 +1364,8 @@ static GF_Err gf_cenc_encrypt_sample_cbc(GF_Crypt *mc, GF_TrackCryptInfo *tci, G
 						clear_bytes = tci->av1.frame_state.tiles[0].obu_start_offset;
 						nal_size = clear_bytes + tci->av1.frame_state.tiles[0].size;
 						//A subsample SHALL be created for each tile. this needs further clarification in the spec
-						prev_entry = NULL;
+						if (prev_entry && prev_entry->bytes_encrypted_data)
+							prev_entry = NULL;
 					}
 					break;
 				default:
@@ -1638,7 +1652,7 @@ GF_Err gf_cenc_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (*pro
 		gf_odf_desc_del((GF_Descriptor*) esd);
 	}
 
-	if (((tci->scheme_type == GF_CRYPT_TYPE_CENS) || (tci->scheme_type == GF_CRYPT_TYPE_CBCS) ) && is_nalu_video) {
+	if (((tci->scheme_type == GF_CRYPT_TYPE_CENS) || (tci->scheme_type == GF_CRYPT_TYPE_CBCS) ) && (is_nalu_video || is_av1_video) )  {
 		if (!tci->crypt_byte_block || !tci->skip_byte_block) {
 			if (tci->crypt_byte_block || tci->skip_byte_block) {
 				GF_LOG(GF_LOG_ERROR, GF_LOG_AUTHOR, ("[CENC] Using pattern mode, crypt_byte_block and skip_byte_block shall be 0 only for track other than video, using 1 crypt + 9 skip\n"));
@@ -1746,6 +1760,8 @@ GF_Err gf_cenc_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (*pro
 
 		switch (tci->sel_enc_type) {
 		case GF_CRYPT_SELENC_RAP:
+			if (!samp->IsRAP)
+				gf_isom_get_sample_rap_roll_info(mp4, track, i+1, (Bool *) &samp->IsRAP, NULL, NULL);
 			if (!samp->IsRAP && !all_rap) {
 				bin128 NULL_IV;
 				e = gf_isom_track_cenc_add_sample_info(mp4, track, tci->sai_saved_box_type, 0, NULL, samp->dataLength, use_subsamples);
@@ -1880,6 +1896,8 @@ GF_Err gf_cenc_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (*pro
 	}
 
 	gf_isom_set_cts_packing(mp4, track, GF_FALSE);
+	//not strictky needed but we call it in case bitrate info in source is wrong
+	gf_media_update_bitrate(mp4, track);
 
 exit:
 	if (samp) gf_isom_sample_del(&samp);
@@ -2235,6 +2253,8 @@ GF_Err gf_adobe_encrypt_track(GF_ISOFile *mp4, GF_TrackCryptInfo *tci, void (*pr
 
 		switch (tci->sel_enc_type) {
 		case GF_CRYPT_SELENC_RAP:
+			if (!samp->IsRAP)
+				gf_isom_get_sample_rap_roll_info(mp4, track, i+1, (Bool *) &samp->IsRAP, NULL, NULL);
 			if (!samp->IsRAP && !all_rap) {
 				is_encrypted_au = GF_FALSE;
 			}

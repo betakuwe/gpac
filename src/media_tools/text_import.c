@@ -35,6 +35,8 @@
 
 #ifndef GPAC_DISABLE_ISOM_WRITE
 
+void gf_media_update_bitrate(GF_ISOFile *file, u32 track);
+
 enum
 {
 	GF_TEXT_IMPORT_NONE = 0,
@@ -703,7 +705,10 @@ static GF_Err gf_text_import_srt(GF_MediaImporter *import)
 			txt_line ++;
 			break;
 		}
-		if (duration && (start >= duration)) break;
+		if (duration && (start >= duration)) {
+			end = 0;
+			break;
+		}
 	}
 
 	/*final flush*/	
@@ -715,9 +720,15 @@ static GF_Err gf_text_import_srt(GF_MediaImporter *import)
 		gf_isom_add_sample(import->dest, track, 1, s);
 		gf_isom_sample_del(&s);
 		nb_samp++;
+		gf_isom_set_last_sample_duration(import->dest, track, 0);
+	} else {
+		if (duration && (start >= duration)) {
+			gf_isom_set_last_sample_duration(import->dest, track, (timescale*duration)/1000);
+		} else {
+			gf_isom_set_last_sample_duration(import->dest, track, 0);
+		}
 	}
 	gf_isom_delete_text_sample(samp);
-	gf_isom_set_last_sample_duration(import->dest, track, 0);
 	gf_set_progress("Importing SRT", nb_samp, nb_samp);
 
 exit:
@@ -997,6 +1008,8 @@ static GF_Err gf_text_import_ebu_ttd(GF_MediaImporter *import, GF_DOMParser *par
 				lang = gf_strdup(att->value);
 				import->esd->langDesc = (GF_Language *) gf_odf_desc_new(GF_ODF_LANG_TAG);
 				gf_isom_set_media_language(import->dest, track, lang);
+			} else {
+				gf_isom_set_media_language(import->dest, track, att->value);
 			}
 		}
 	}
@@ -1303,6 +1316,7 @@ static GF_Err gf_text_import_ebu_ttd(GF_MediaImporter *import, GF_DOMParser *par
 	}
 	GF_LOG(GF_LOG_DEBUG, GF_LOG_PARSER, ("last_sample_duration="LLU", last_sample_end="LLU"\n", last_sample_duration, last_sample_end));
 	gf_isom_set_last_sample_duration(import->dest, track, (u32) last_sample_duration);
+	gf_media_update_bitrate(import->dest, track);
 	gf_set_progress("Importing TTML EBU-TTD", nb_samples, nb_samples);
 
 exit:
