@@ -1347,6 +1347,9 @@ static GF_Err gf_media_isom_segment_file(GF_ISOFile *input, const char *output_f
 					gf_list_rem(trak->Media->information->sampleTable->sampleGroupsDescription, 0);
 				}
 			}
+			if (dash_input->bandwidth) {
+				gf_isom_update_bitrate(output, TrackNum, 0, dash_input->bandwidth, dash_input->bandwidth, 0);
+			}
 
 // Commenting it the code for Timed Text tracks, it may happen that we have only one long sample, fragmentation is useful
 #if 0
@@ -1590,6 +1593,7 @@ static GF_Err gf_media_isom_segment_file(GF_ISOFile *input, const char *output_f
 				isom_get_audio_info_with_m4a_sbr_ps(input, i+1, 1, &_sr, &_nb_ch, NULL);
 			}
 			else {
+				gf_isom_get_audio_info(input, i+1, 1, &_sr, &_nb_ch, NULL);
 				isom_get_audio_info_with_m4a_sbr_ps(input, i+1, 1, NULL, &_nb_ch, NULL);
 			}
 #ifndef GPAC_DISABLE_AV_PARSERS
@@ -2022,7 +2026,11 @@ restart_fragmentation_pass:
 					next = gf_isom_get_sample(input, tf->OriginalTrack, 1, &j);
 					next->DTS += tf->loop_ts_offset;
 				} else if (clamp_duration) {
-					sample_duration = (u32)(clamp_duration*tf->TimeScale - (sample->DTS - tf->loop_ts_offset) + 0.5);
+					if (tf->MediaType!=GF_ISOM_MEDIA_AUDIO) {
+						sample_duration = (u32)(clamp_duration*tf->TimeScale - (sample->DTS - tf->loop_ts_offset) + 0.5);
+					} else {
+						sample_duration = gf_isom_get_sample_duration(input, tf->OriginalTrack, tf->SampleNum+1);
+					}
 					force_eos = GF_TRUE;
 				} else {
 					sample_duration = (u32) (gf_isom_get_media_duration(input, tf->OriginalTrack) - (sample->DTS - tf->loop_ts_offset));
@@ -2079,12 +2087,17 @@ restart_fragmentation_pass:
 							ref_track_next_cts = next_cts;
 						}
 					} else {
-						u64 cts = gf_isom_get_media_duration(input, tf->OriginalTrack);
-						if (dash_input->media_duration * tf->TimeScale < cts)
-							cts = dash_input->media_duration * tf->TimeScale;
-							
-						if (cts>ref_track_next_cts) ref_track_next_cts = cts;
-						else ref_track_next_cts += sample_duration;
+						if (tf->MediaType==GF_ISOM_MEDIA_AUDIO) {
+							ref_track_next_cts += sample_duration;
+						} else {
+							u64 last_cts = gf_isom_get_media_duration(input, tf->OriginalTrack);
+							u64 dur = (dash_input->clamp_duration ? dash_input->clamp_duration : dash_input->media_duration) * tf->TimeScale;
+							if (dur < last_cts)
+								last_cts = dur;
+
+							if (last_cts > ref_track_next_cts) ref_track_next_cts = last_cts;
+							else ref_track_next_cts += sample_duration;
+						}
 					}
 				}
 
@@ -2583,7 +2596,7 @@ restart_fragmentation_pass:
 					file_size = gf_isom_get_file_size(output);
 					end_range = file_size - 1;
 					if (dasher->single_file_mode!=1) {
-						sprintf(szMPDTempLine, "      <SegmentURL mediaRange=\""LLD"-"LLD"\"", start_range, end_range);
+						sprintf(szMPDTempLine, "     <SegmentURL mediaRange=\""LLD"-"LLD"\"", start_range, end_range);
 						gf_bs_write_data(mpd_bs, szMPDTempLine, (u32) strlen(szMPDTempLine));
 						if (idx_start_range || idx_end_range) {
 							sprintf(szMPDTempLine, " indexRange=\""LLD"-"LLD"\"", idx_start_range, idx_end_range);
