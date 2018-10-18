@@ -3700,8 +3700,9 @@ int mp4boxMain(int argc, char **argv)
 	/*init libgpac*/
 	gf_sys_init(mem_track);
 	if (argc < 2) {
-		PrintUsage();
-		PrintVersion();
+		fprintf(stderr, "Not enough arguments - check usage with -h\n"
+			"MP4Box - GPAC version " GPAC_FULL_VERSION "\n"
+	        "(c) Telecom ParisTech 2000-2018 - Licence LGPL v2\n");
 		gf_sys_close();
 		return 0;
 	}
@@ -4310,6 +4311,11 @@ int mp4boxMain(int argc, char **argv)
 				u32 slept = gf_sys_clock();
 				u32 sleep_for = gf_dasher_next_update_time(dasher, &ms_in_session);
 				fprintf(stderr, "Next generation scheduled in %u ms (DASH time "LLU" ms)\n", sleep_for, ms_in_session);
+				if (ms_in_session>=run_for) {
+					dash_cumulated_time = 1+run_for;
+					continue;
+				}
+				
 				while (1) {
 					if (gf_prompt_has_input()) {
 						char c = (char) gf_prompt_get_char();
@@ -4333,7 +4339,7 @@ int mp4boxMain(int argc, char **argv)
 					if (!sleep_for) break;
 
 					gf_sleep(1);
-					sleep_for = gf_dasher_next_update_time(dasher, NULL);
+					sleep_for = gf_dasher_next_update_time(dasher, &ms_in_session);
 					if (sleep_for<1) {
 						dash_now_time=gf_sys_clock();
 						fprintf(stderr, "Slept for %d ms before generation\n", dash_now_time - slept);
@@ -4349,7 +4355,7 @@ int mp4boxMain(int argc, char **argv)
 		gf_dasher_del(dasher);
 
 		if (dash_ctx) {
-			if (do_abort==3) {
+			if (!force_test_mode && (do_abort==3)) {
 				if (!dash_ctx_file) {
 					char szName[1024];
 					fprintf(stderr, "Enter file name to save dash context:\n");
