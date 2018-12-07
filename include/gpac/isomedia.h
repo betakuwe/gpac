@@ -1033,14 +1033,6 @@ GF_Err gf_isom_get_fragment_defaults(GF_ISOFile *the_file, u32 trackNumber,
                                      u32 *defaultRandomAccess, u8 *defaultPadding, u16 *defaultDegradationPriority);
 
 
-/*non standard extensions used for video packets in order to keep AU structure in the file format
-(no normative tables for that). Info is NOT written to disk.
-*/
-/*get number of fragments for a sample */
-u32 gf_isom_get_sample_fragment_count(GF_ISOFile *the_file, u32 trackNumber, u32 sampleNumber);
-/*get sample fragment size*/
-u16 gf_isom_get_sample_fragment_size(GF_ISOFile *the_file, u32 trackNumber, u32 sampleNumber, u32 FragmentIndex);
-
 /*returns 1 if file is single AV (max one audio, one video, one text and basic od/bifs)*/
 Bool gf_isom_is_single_av(GF_ISOFile *file);
 
@@ -1073,6 +1065,9 @@ Bool gf_isom_get_last_producer_time_box(GF_ISOFile *file, u32 *refTrackID, u64 *
 /*gets max/average rate info as indicated in ESDS or BTRT boxes
 if sampleDescIndex is 0, gather for all sample descriptions*/
 GF_Err gf_isom_get_bitrate(GF_ISOFile *movie, u32 trackNumber, u32 sampleDescIndex, u32 *average_bitrate, u32 *max_bitrate, u32 *decode_buffer_size);
+
+/*returns true if this sample was the first sample of a traf in a fragmented file, false otherwise*/
+Bool gf_isom_sample_was_traf_start(GF_ISOFile *movie, u32 trackNumber, u32 sampleNum);
 
 #ifndef GPAC_DISABLE_ISOM_WRITE
 
@@ -1337,13 +1332,6 @@ typedef enum {
 } GF_AudioSampleEntryImportMode;
 
 GF_Err gf_isom_set_audio_info(GF_ISOFile *the_file, u32 trackNumber, u32 StreamDescriptionIndex, u32 sampleRate, u32 nbChannels, u8 bitsPerSample, GF_AudioSampleEntryImportMode asemode);
-
-/*non standard extensions: set/remove a fragment of a sample - this is used for video packets
-in order to keep AU structure in the file format (no normative tables for that). Info is NOT written to disk*/
-GF_Err gf_isom_add_sample_fragment(GF_ISOFile *the_file, u32 trackNumber, u32 sampleNumber, u16 FragmentSize);
-GF_Err gf_isom_remove_sample_fragment(GF_ISOFile *the_file, u32 trackNumber, u32 sampleNumber);
-/*remove all sample fragment info for this track*/
-GF_Err gf_isom_remove_sample_fragments(GF_ISOFile *the_file, u32 trackNumber);
 
 /*set CTS unpack mode (used for B-frames & like): in unpack mode, each sample uses one entry in CTTS tables
 unpack=0: set unpack on - !!creates a CTTS table if none found!!
