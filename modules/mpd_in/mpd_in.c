@@ -1117,6 +1117,9 @@ GF_Err MPD_ConnectService(GF_InputService *plug, GF_ClientService *serv, const c
 	else if (!strcmp(opt, "BOLA_O")) {
 		mpdin->adaptation_algorithm = GF_DASH_ALGO_BOLA_O;
 	}
+	else if (!strcmp(opt, "ABMA+")) {
+		mpdin->adaptation_algorithm = GF_DASH_ALGO_ABMA_PLUS;
+	}
 
 	opt = gf_modules_get_option((GF_BaseInterface *)plug, "DASH", "StartRepresentation");
 	if (!opt) {

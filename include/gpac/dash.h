@@ -530,7 +530,8 @@ typedef enum {
 	GF_DASH_ALGO_BOLA_FINITE,
 	GF_DASH_ALGO_BOLA_BASIC,
 	GF_DASH_ALGO_BOLA_U,
-	GF_DASH_ALGO_BOLA_O
+	GF_DASH_ALGO_BOLA_O,
+	GF_DASH_ALGO_ABMA_PLUS
 } GF_DASHAdaptationAlgorithm;
 
 //sets adaptation logic algorithm
